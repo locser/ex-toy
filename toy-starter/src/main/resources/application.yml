@@ -1,5 +1,5 @@
 server:
-  port: 8080
+  port: 1122
   tomcat:
     threads:
       max: 200 # default value
@@ -22,17 +22,11 @@ spring:
     database: mysql
     show-sql: true
     hibernate:
-      ddl-auto: create # Automatically create tables
+      ddl-auto: create # Không tự động tạo/ cập nhật bảng thay vì update
     properties:
       hibernate:
         format_sql: true
         use_sql_comments: true
-        show_sql: true
-  logging:
-    level:
-      org.hibernate.SQL: DEBUG
-      org.hibernate.type.descriptor.sql.BasicBinder: TRACE
-      org.hibernate: DEBUG
   jackson:
     serialization:
       indent-output: true
@@ -90,3 +84,16 @@ management:
       show-details: always
     prometheus:
       enabled: true
+# Cấu hình Springdoc OpenAPI
+springdoc:
+  api-docs:
+    path: /api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    operationsSorter: method
+    tagsSorter: alpha
+    filter: true
+  packages-to-scan: locser.controller.http
+  paths-to-match: /api/**
+  default-produces-media-type: application/json
+  default-consumes-media-type: application/json

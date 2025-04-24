@@ -1,6 +1,0 @@
-Database - Entity
-1. All property in database have a default value and not null property
-2. All status property type is number and export enum for status with x_STATUS
-
-Controller
-1. Use POST method for all PUT , PATCH, DELETE

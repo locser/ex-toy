@@ -9,8 +9,7 @@ import lombok.Setter;
 import java.time.LocalDateTime;
 
 /**
- * Entity đại diện cho Hình ảnh đồ chơi trong hệ thống trao đổi đồ chơi.
- * Lưu trữ đường dẫn đến hình ảnh và thông tin liên quan đến hình ảnh của đồ chơi.
+ * Entity representing a Toy Photo in the toy exchange system.
  */
 @Entity
 @Table(name = "toy_photos")

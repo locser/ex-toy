@@ -1,13 +1,7 @@
 package locser.toy.domain.model.enums;
 
 /**
- * Đại diện cho các loại thực thể có thể liên quan đến các thông báo hoặc sự kiện.
- * - EXCHANGE: Giao dịch trao đổi
- * - CAMPAIGN: Chiến dịch/Sự kiện
- * - USER: Người dùng
- * - TOY: Đồ chơi
- * - DISPUTE: Tranh chấp
- * - REVIEW: Đánh giá
+ * Represents the possible entity types for related entities.
  */
 public enum EntityType {
     EXCHANGE,   // 0

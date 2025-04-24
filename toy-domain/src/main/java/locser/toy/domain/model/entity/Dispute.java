@@ -18,9 +18,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 /**
- * Entity đại diện cho Tranh chấp trong hệ thống trao đổi đồ chơi.
- * Lưu trữ thông tin về các tranh chấp phát sinh trong quá trình trao đổi đồ chơi,
- * bao gồm lý do tranh chấp, người báo cáo, trạng thái và cách giải quyết.
+ * Entity representing a Dispute in the toy exchange system.
  */
 @Entity
 @Table(name = "disputes")

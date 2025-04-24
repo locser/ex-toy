@@ -9,9 +9,7 @@ import lombok.Setter;
 import java.time.LocalDateTime;
 
 /**
- * Entity đại diện cho Đánh giá trong hệ thống trao đổi đồ chơi.
- * Lưu trữ các đánh giá của người dùng sau khi hoàn thành giao dịch trao đổi,
- * bao gồm điểm đánh giá, bình luận và thông tin liên quan đến người đánh giá và người được đánh giá.
+ * Entity representing a Review in the toy exchange system.
  */
 @Entity
 @Table(name = "reviews")

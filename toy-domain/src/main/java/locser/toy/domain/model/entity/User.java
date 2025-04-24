@@ -10,8 +10,7 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 /**
- * Entity đại diện cho Người dùng trong hệ thống trao đổi đồ chơi.
- * Lưu trữ thông tin cá nhân, thông tin đăng nhập và đánh giá của người dùng.
+ * Entity representing a User in the toy exchange system.
  */
 @Entity
 @Table(name = "users")

@@ -11,9 +11,7 @@ import lombok.Setter;
 import java.time.LocalDateTime;
 
 /**
- * Entity đại diện cho Thông báo trong hệ thống trao đổi đồ chơi.
- * Lưu trữ các thông báo gửi đến người dùng về các sự kiện như yêu cầu trao đổi mới,
- * cập nhật trạng thái giao dịch, tin nhắn mới, v.v.
+ * Entity representing a Notification in the toy exchange system.
  */
 @Entity
 @Table(name = "notifications")

@@ -9,8 +9,7 @@ import lombok.Setter;
 import java.time.LocalDateTime;
 
 /**
- * Entity đại diện cho Tin nhắn trao đổi trong hệ thống trao đổi đồ chơi.
- * Lưu trữ các tin nhắn trao đổi giữa người dùng trong quá trình thực hiện giao dịch trao đổi đồ chơi.
+ * Entity representing an Exchange Message in the toy exchange system.
  */
 @Entity
 @Table(name = "exchange_messages")

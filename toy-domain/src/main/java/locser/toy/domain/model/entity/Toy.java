@@ -11,8 +11,7 @@ import lombok.Setter;
 import java.time.LocalDateTime;
 
 /**
- * Entity đại diện cho Đồ chơi trong hệ thống trao đổi đồ chơi.
- * Lưu trữ thông tin về đồ chơi, tình trạng, danh mục và các thông tin liên quan đến việc trao đổi.
+ * Entity representing a Toy in the toy exchange system.
  */
 @Entity
 @Table(name = "toys")

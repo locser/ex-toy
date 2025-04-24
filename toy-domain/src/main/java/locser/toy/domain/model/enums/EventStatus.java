@@ -1,17 +1,23 @@
 package locser.toy.domain.model.enums;
 
 /**
- * Đại diện cho các trạng thái có thể của một Sự kiện.
- * - UPCOMING: Sự kiện sắp diễn ra
- * - ONGOING: Sự kiện đang diễn ra
- * - FINISHED: Sự kiện đã kết thúc
- * - DELETED: Sự kiện đã bị xóa
+ * Represents the possible states of an Event.
  */
 
 public enum EventStatus {
-    UPCOMING, // 0
-    ONGOING,  // 1
-    FINISHED,  // 2
-    DELETED
+  ALL(-1),
+  UPCOMING(1),
+  ONGOING(2),
+  FINISHED(3),
+  DELETED(4);
 
+  private final int value;
+
+  EventStatus(int value) {
+    this.value = value;
+  }
+
+  public int getValue() {
+    return value;
+  }
 }

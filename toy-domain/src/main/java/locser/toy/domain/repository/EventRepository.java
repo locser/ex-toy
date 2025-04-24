@@ -1,61 +1,37 @@
 package locser.toy.domain.repository;
 
+import java.util.List;
+import java.util.Optional;
 import locser.toy.domain.model.entity.Event;
 import locser.toy.domain.model.enums.EventStatus;
 
-import java.util.List;
-import java.util.Optional;
-
-/**
- * Repository interface để truy cập dữ liệu Event.
- */
 public interface EventRepository {
 
-    /**
-     * Tìm một sự kiện theo ID.
-     *
-     * @param id ID của sự kiện
-     * @return Optional chứa sự kiện nếu tìm thấy, hoặc empty nếu không tìm thấy
-     */
-    Optional<Event> findById(Long id);
+  Optional<Event> findOneById(Long id);
 
-    /**
-     * Tìm một sự kiện theo ID (phương thức cũ).
-     *
-     * @param id ID của sự kiện
-     * @return Optional chứa sự kiện nếu tìm thấy, hoặc empty nếu không tìm thấy
-     * @deprecated Sử dụng {@link #findById(Long)} thay thế
-     */
-    @Deprecated
-    Optional<Event> findOneById(Long id);
+  Event save(Event event);
 
-    /**
-     * Tìm tất cả các sự kiện.
-     *
-     * @return Danh sách tất cả các sự kiện
-     */
-    List<Event> findAll();
+  Event findById(Long id);
 
-    /**
-     * Tìm các sự kiện theo trạng thái.
-     *
-     * @param status Trạng thái cần tìm
-     * @return Danh sách các sự kiện có trạng thái tương ứng
-     */
-    List<Event> findByStatus(EventStatus status);
+  List<Event> findByStatus(EventStatus status);
 
-    /**
-     * Lưu một sự kiện.
-     *
-     * @param event Sự kiện cần lưu
-     * @return Sự kiện đã được lưu
-     */
-    Event save(Event event);
+  List<Event> findAll();
 
-    /**
-     * Xóa một sự kiện.
-     *
-     * @param event Sự kiện cần xóa
-     */
-    void delete(Event event);
+  /**
+   * Lấy danh sách sự kiện có phân trang.
+   *
+   * @param page   Số trang (bắt đầu từ 0)
+   * @param size   Kích thước trang
+   * @param status Trạng thái sự kiện (tùy chọn)
+   * @return Danh sách sự kiện theo trang
+   */
+  List<Event> findWithPagination(int page, int size, EventStatus status);
+
+  /**
+   * Đếm tổng số sự kiện.
+   *
+   * @param status Trạng thái sự kiện (tùy chọn)
+   * @return Tổng số sự kiện
+   */
+  long count(EventStatus status);
 }

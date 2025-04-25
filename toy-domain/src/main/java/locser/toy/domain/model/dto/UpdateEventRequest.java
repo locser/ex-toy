@@ -1,12 +1,11 @@
 package locser.toy.domain.model.dto;
 
-import locser.toy.domain.model.enums.EventStatus;
+import java.time.LocalDateTime;
+
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
-import java.time.LocalDateTime;
 
 /**
  * DTO đại diện cho yêu cầu cập nhật một Sự kiện/Chiến dịch.
@@ -22,5 +21,5 @@ public class UpdateEventRequest {
     private LocalDateTime endDate;
     private String theme;
     private String rules;
-    private EventStatus status;
+    private Integer status;
 }

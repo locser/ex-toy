@@ -1,12 +1,18 @@
 package locser.toy.domain.model.entity;
 
-import jakarta.persistence.*;
+import java.time.LocalDateTime;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+import jakarta.persistence.Version;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-
-import java.time.LocalDateTime;
 
 /**
  * Entity representing a Review in the toy exchange system.
@@ -20,7 +26,7 @@ import java.time.LocalDateTime;
 public class Review {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "review_id")
+    @Column(name = "id")
     private Long id;
 
     @Column(name = "exchange_id", nullable = false, columnDefinition = "BIGINT DEFAULT 0")
@@ -35,7 +41,7 @@ public class Review {
     @Column(name = "rating", nullable = false, columnDefinition = "INT DEFAULT 0")
     private Integer rating = 0;
 
-    @Column(name = "comment", nullable = false, columnDefinition = "TEXT DEFAULT ''")
+    @Column(name = "comment", nullable = false, columnDefinition = "TEXT")
     private String comment = "";
 
     @Column(name = "created_at", nullable = false, columnDefinition = "DATETIME DEFAULT CURRENT_TIMESTAMP")

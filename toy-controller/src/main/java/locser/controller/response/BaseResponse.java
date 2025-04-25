@@ -1,7 +1,5 @@
 package locser.controller.response;
 
-import org.springframework.http.HttpStatus;
-
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -18,7 +16,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class BaseResponse<T> {
 
-  private HttpStatus success;
+  private Integer success;
   private String message;
   private T data;
 
@@ -32,7 +30,7 @@ public class BaseResponse<T> {
    */
   public static <T> BaseResponse<T> success(T data, String message) {
     return BaseResponse.<T>builder()
-        .success(HttpStatus.OK)
+        .success(200)
         .message(message)
         .data(data)
         .build();
@@ -62,7 +60,7 @@ public class BaseResponse<T> {
    */
   public static <T> BaseResponse<T> error(String message) {
     return BaseResponse.<T>builder()
-        .success(HttpStatus.BAD_REQUEST)
+        .success(400)
         .message(message)
         .build();
   }

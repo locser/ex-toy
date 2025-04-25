@@ -22,14 +22,18 @@ spring:
     database: mysql
     show-sql: true
     hibernate:
-      ddl-auto: create # Không tự động tạo/ cập nhật bảng thay vì update
+      ddl-auto: update # Không tự động tạo/ cập nhật bảng thay vì update
     properties:
       hibernate:
         format_sql: true
         use_sql_comments: true
+
   jackson:
     serialization:
       indent-output: true
+    deserialization:
+      FAIL_ON_UNKNOWN_PROPERTIES: false
+      READ_UNKNOWN_ENUM_VALUES_AS_NULL: true
   # Redis server connection settings
   # data:
   #   redis:
@@ -46,6 +50,8 @@ spring:
   threads:
     virtual:
       enabled: true
+  main:
+    allow-bean-definition-overriding: true
 resilience4j:
   circuitbreaker:
     instances:
@@ -85,15 +91,19 @@ management:
     prometheus:
       enabled: true
 # Cấu hình Springdoc OpenAPI
-springdoc:
-  api-docs:
-    path: /api-docs
-  swagger-ui:
-    path: /swagger-ui.html
-    operationsSorter: method
-    tagsSorter: alpha
-    filter: true
-  packages-to-scan: locser.controller.http
-  paths-to-match: /api/**
-  default-produces-media-type: application/json
-  default-consumes-media-type: application/json
+# springdoc:
+#   api-docs:
+#     path: /api-docs
+#   swagger-ui:
+#     path: /swagger-ui.html
+#     operationsSorter: method
+#     tagsSorter: alpha
+#     filter: true
+#   packages-to-scan: locser.controller.http
+#   paths-to-match: /api/**
+#   default-produces-media-type: application/json
+#   default-consumes-media-type: application/json
+
+logging:
+  level:
+    locser.controller: DEBUG

@@ -22,6 +22,8 @@ import locser.controller.mapper.EventDTOMapper;
 import locser.controller.response.BaseResponse;
 import locser.toy.domain.model.dto.EventDTO;
 import locser.toy.domain.model.enums.EventStatus;
+import locser.utils.AppConstants;
+import locser.utils.AppUtils;
 
 /**
  * Controller xử lý các API liên quan đến Sự kiện/Chiến dịch.
@@ -29,7 +31,6 @@ import locser.toy.domain.model.enums.EventStatus;
 @RestController
 @RequestMapping("/api/v1")
 public class EventController {
-
         private final EventApplicationService eventService;
 
         public EventController(EventApplicationService eventService) {
@@ -56,7 +57,8 @@ public class EventController {
          */
         @GetMapping("/campaigns")
         public BaseResponse<List<EventResponseDTO>> getAllEvents(@RequestParam(required = true) EventStatus status) {
-                List<EventDTO> events = eventService.getAllEvents(status);
+                System.out.println(status.getClass());
+                List<EventDTO> events = eventService.getAllEvents(status.getValue());
                 List<EventResponseDTO> responseDTOs = events.stream()
                                 .map(EventDTOMapper::toEventResponseDTO)
                                 .collect(Collectors.toList());
@@ -73,9 +75,11 @@ public class EventController {
          */
         @GetMapping("/campaigns/pagination")
         public BaseResponse<PageResponseDTO<EventResponseDTO>> getEventsWithPagination(
-                        @RequestParam(defaultValue = "1") int page,
-                        @RequestParam(defaultValue = "20") int limit,
-                        @RequestParam(required = false) EventStatus status) {
+                        @RequestParam(name = "page", required = false, defaultValue = AppConstants.DEFAULT_PAGE_NUMBER) Integer page,
+                        @RequestParam(name = "limit", required = false, defaultValue = AppConstants.DEFAULT_PAGE_SIZE) Integer limit,
+                        @RequestParam(defaultValue = "-1", name = "status") Integer status) {
+                AppUtils.validatePageNumberAndSize(page, limit);
+
                 var pageResponse = eventService.getEventsWithPagination(page, limit, status);
                 var pageResponseDTO = EventDTOMapper.toPageResponseDTO(pageResponse);
                 return BaseResponse.success(pageResponseDTO);

@@ -69,10 +69,10 @@ public class EventApplicationServiceImpl implements EventApplicationService {
   }
 
   @Override
-  public List<EventDTO> getAllEvents(EventStatus status) {
+  public List<EventDTO> getAllEvents(int status) {
     List<Event> events;
 
-    if (status != null && status != EventStatus.ALL) {
+    if (status != EventStatus.ALL.getValue()) {
       events = eventRepository.findByStatus(status);
     } else {
       events = eventRepository.findAll();
@@ -136,8 +136,8 @@ public class EventApplicationServiceImpl implements EventApplicationService {
   }
 
   @Override
-  public PageResponse<EventDTO> getEventsWithPagination(int page, int limit,
-      EventStatus status) {
+  public PageResponse<EventDTO> getEventsWithPagination(int page, int limit, int status) {
+
     // Lấy danh sách sự kiện theo trang
     List<Event> events = eventRepository.findWithPagination(page, limit, status);
 

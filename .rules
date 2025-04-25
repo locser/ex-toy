@@ -1,0 +1,10 @@
+Database - Entity
+1. All property in database have a default value and not null property
+2. All status property type is number and export enum for status with x_STATUS
+
+Controller
+1. Use POST method for all PUT , PATCH, DELETE
+2. Only throw HttpException with status code 400 and 401.
+3. when all request success, all response have status code 200
+4. when update a data entity, client always send request with full dto, and update
+5. if get data, if not filter property -> send request with value default = -1

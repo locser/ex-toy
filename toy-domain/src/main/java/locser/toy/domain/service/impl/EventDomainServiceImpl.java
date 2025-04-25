@@ -1,12 +1,13 @@
 package locser.toy.domain.service.impl;
 
+import org.springframework.stereotype.Service;
+
 import locser.toy.domain.exception.BadRequestException;
 import locser.toy.domain.exception.ResourceNotFoundException;
 import locser.toy.domain.model.entity.Event;
 import locser.toy.domain.model.enums.EventStatus;
 import locser.toy.domain.repository.EventRepository;
 import locser.toy.domain.service.EventDomainService;
-import org.springframework.stereotype.Service;
 
 /**
  * Triển khai các dịch vụ miền cho Event.
@@ -23,7 +24,7 @@ public class EventDomainServiceImpl implements EventDomainService {
   @Override
   public Event initializeNewEvent(Event event) {
     // Thiết lập các giá trị mặc định
-    event.setStatus(EventStatus.UPCOMING);
+    event.setStatus(EventStatus.UPCOMING.getValue());
 
     // Xác thực dữ liệu
     validateEventDates(event);
@@ -50,7 +51,7 @@ public class EventDomainServiceImpl implements EventDomainService {
     Event event = getEventById(id);
 
     // Soft delete: Chỉ đánh dấu là đã xóa
-    event.setStatus(EventStatus.DELETED);
+    event.setStatus(EventStatus.DELETED.getValue());
     eventRepository.save(event);
   }
 

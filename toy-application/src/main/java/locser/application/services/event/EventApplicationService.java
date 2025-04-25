@@ -7,7 +7,6 @@ import locser.toy.domain.model.dto.EventDTO;
 import locser.toy.domain.model.dto.PageResponse;
 import locser.toy.domain.model.dto.UpdateEventRequest;
 import locser.toy.domain.model.entity.Event;
-import locser.toy.domain.model.enums.EventStatus;
 
 /**
  * Lớp dịch vụ ứng dụng cho Event, điều phối các use case.
@@ -21,7 +20,7 @@ public interface EventApplicationService {
 
   EventDTO createEvent(CreateEventRequest request);
 
-  List<EventDTO> getAllEvents(EventStatus status);
+  List<EventDTO> getAllEvents(int status);
 
   EventDTO getEventById(Long id);
 
@@ -37,5 +36,5 @@ public interface EventApplicationService {
    * @param status Trạng thái sự kiện (tùy chọn)
    * @return Đối tượng PageResponse chứa danh sách sự kiện và thông tin phân trang
    */
-  PageResponse<EventDTO> getEventsWithPagination(int page, int limit, EventStatus status);
+  PageResponse<EventDTO> getEventsWithPagination(int page, int limit, int status);
 }

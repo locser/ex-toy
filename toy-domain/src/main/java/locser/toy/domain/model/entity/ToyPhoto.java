@@ -1,12 +1,18 @@
 package locser.toy.domain.model.entity;
 
-import jakarta.persistence.*;
+import java.time.LocalDateTime;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+import jakarta.persistence.Version;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-
-import java.time.LocalDateTime;
 
 /**
  * Entity representing a Toy Photo in the toy exchange system.
@@ -20,7 +26,7 @@ import java.time.LocalDateTime;
 public class ToyPhoto {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "photo_id")
+    @Column(name = "id")
     private Long id;
 
     @Column(name = "toy_id", nullable = false, columnDefinition = "BIGINT DEFAULT 0")

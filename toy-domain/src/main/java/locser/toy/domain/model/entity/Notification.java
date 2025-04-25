@@ -1,14 +1,22 @@
 package locser.toy.domain.model.entity;
 
-import jakarta.persistence.*;
+import java.time.LocalDateTime;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+import jakarta.persistence.Version;
 import locser.toy.domain.model.enums.EntityType;
 import locser.toy.domain.model.enums.NotificationType;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-
-import java.time.LocalDateTime;
 
 /**
  * Entity representing a Notification in the toy exchange system.
@@ -22,7 +30,7 @@ import java.time.LocalDateTime;
 public class Notification {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "notification_id")
+    @Column(name = "id")
     private Long id;
 
     @Column(name = "user_id", nullable = false, columnDefinition = "BIGINT DEFAULT 0")
@@ -32,14 +40,13 @@ public class Notification {
     @Column(name = "type", nullable = false, columnDefinition = "INT DEFAULT 0")
     private NotificationType type = NotificationType.NEW_EXCHANGE_REQUEST;
 
-    @Enumerated(EnumType.ORDINAL)
     @Column(name = "related_entity_type", nullable = false, columnDefinition = "INT DEFAULT 0")
-    private EntityType relatedEntityType = EntityType.EXCHANGE;
+    private Integer relatedEntityType = EntityType.EXCHANGE.getValue();
 
     @Column(name = "related_entity_id", nullable = false, columnDefinition = "BIGINT DEFAULT 0")
     private Long relatedEntityId = 0L;
 
-    @Column(name = "message", nullable = false, columnDefinition = "TEXT DEFAULT ''")
+    @Column(name = "message", nullable = false, columnDefinition = "TEXT")
     private String message = "";
 
     @Column(name = "is_read", nullable = false, columnDefinition = "BOOLEAN DEFAULT FALSE")

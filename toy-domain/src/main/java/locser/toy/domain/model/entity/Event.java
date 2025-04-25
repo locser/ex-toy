@@ -1,15 +1,14 @@
 package locser.toy.domain.model.entity;
 
+import java.time.LocalDateTime;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import jakarta.persistence.Version;
-import java.time.LocalDateTime;
 import locser.toy.domain.model.enums.EventStatus;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -31,8 +30,8 @@ public class Event {
   @Column(name = "name", nullable = false)
   private String name;
 
-  @Column(name = "description", nullable = false, columnDefinition = "INT DEFAULT ''")
-  private String description;
+  @Column(name = "description", nullable = false, columnDefinition = "TEXT")
+  private String description = "";
 
   @Column(name = "start_date", nullable = false, columnDefinition = "DATETIME DEFAULT CURRENT_TIMESTAMP")
   private LocalDateTime startDate;
@@ -46,10 +45,8 @@ public class Event {
   @Column(name = "rules", nullable = false, columnDefinition = "JSON")
   private String rules;
 
-  @Enumerated(EnumType.ORDINAL) // Store enum as number (ordinal)
   @Column(name = "status", nullable = false, columnDefinition = "INT DEFAULT 0")
-  private EventStatus status = EventStatus.UPCOMING;
-
+  private Integer status = EventStatus.UPCOMING.getValue();
 
   @Column(name = "created_at", nullable = false, columnDefinition = "DATETIME DEFAULT CURRENT_TIMESTAMP")
   private LocalDateTime createdAt;

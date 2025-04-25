@@ -1,14 +1,21 @@
 package locser.toy.domain.model.entity;
 
-import jakarta.persistence.*;
+import java.time.LocalDateTime;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.PreUpdate;
+import jakarta.persistence.Table;
+import jakarta.persistence.Version;
 import locser.toy.domain.model.enums.ToyConditionStatus;
 import locser.toy.domain.model.enums.ToyStatus;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-
-import java.time.LocalDateTime;
 
 /**
  * Entity representing a Toy in the toy exchange system.
@@ -22,7 +29,7 @@ import java.time.LocalDateTime;
 public class Toy {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "toy_id")
+    @Column(name = "id")
     private Long id;
 
     @Column(name = "user_id", nullable = false, columnDefinition = "BIGINT DEFAULT 0")
@@ -34,21 +41,19 @@ public class Toy {
     @Column(name = "name", nullable = false, columnDefinition = "VARCHAR(255) DEFAULT ''")
     private String name = "";
 
-    @Column(name = "description", nullable = false, columnDefinition = "TEXT DEFAULT ''")
+    @Column(name = "description", nullable = false, columnDefinition = "TEXT")
     private String description = "";
 
     @Column(name = "category", nullable = false, columnDefinition = "VARCHAR(100) DEFAULT ''")
     private String category = "";
 
-    @Enumerated(EnumType.ORDINAL)
-    @Column(name = "condition", nullable = false, columnDefinition = "INT DEFAULT 0")
-    private ToyConditionStatus condition = ToyConditionStatus.NEW;
+    @Column(name = "toy_condition", nullable = false, columnDefinition = "INT DEFAULT 0")
+    private Integer condition = ToyConditionStatus.NEW.getValue();
 
-    @Enumerated(EnumType.ORDINAL)
     @Column(name = "status", nullable = false, columnDefinition = "INT DEFAULT 0")
-    private ToyStatus status = ToyStatus.AVAILABLE;
+    private Integer status = ToyStatus.AVAILABLE.getValue();
 
-    @Column(name = "desired_exchange_items", nullable = false, columnDefinition = "TEXT DEFAULT ''")
+    @Column(name = "desired_exchange_items", nullable = false, columnDefinition = "TEXT")
     private String desiredExchangeItems = "";
 
     @Column(name = "created_at", nullable = false, columnDefinition = "DATETIME DEFAULT CURRENT_TIMESTAMP")

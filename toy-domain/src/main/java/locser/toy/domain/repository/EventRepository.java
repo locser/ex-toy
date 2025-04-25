@@ -2,8 +2,8 @@ package locser.toy.domain.repository;
 
 import java.util.List;
 import java.util.Optional;
+
 import locser.toy.domain.model.entity.Event;
-import locser.toy.domain.model.enums.EventStatus;
 
 public interface EventRepository {
 
@@ -13,7 +13,7 @@ public interface EventRepository {
 
   Event findById(Long id);
 
-  List<Event> findByStatus(EventStatus status);
+  List<Event> findByStatus(int status);
 
   List<Event> findAll();
 
@@ -25,7 +25,7 @@ public interface EventRepository {
    * @param status Trạng thái sự kiện (tùy chọn)
    * @return Danh sách sự kiện theo trang
    */
-  List<Event> findWithPagination(int page, int size, EventStatus status);
+  List<Event> findWithPagination(int page, int size, int status);
 
   /**
    * Đếm tổng số sự kiện.
@@ -33,5 +33,5 @@ public interface EventRepository {
    * @param status Trạng thái sự kiện (tùy chọn)
    * @return Tổng số sự kiện
    */
-  long count(EventStatus status);
+  long count(int status);
 }

@@ -1,5 +1,6 @@
 package locser.controller.dto;
 
+import java.time.Instant;
 import java.time.LocalDateTime;
 
 import lombok.AllArgsConstructor;
@@ -23,6 +24,6 @@ public class EventResponseDTO {
     private String theme;
     private String rules;
     private Integer status;
-    private LocalDateTime createdAt;
-    private LocalDateTime updatedAt;
+    private Instant createdAt;
+    private Instant updatedAt;
 }

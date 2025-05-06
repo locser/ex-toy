@@ -16,7 +16,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class BaseResponse<T> {
 
-  private Integer success;
+  private Integer status;
   private String message;
   private T data;
 
@@ -30,7 +30,7 @@ public class BaseResponse<T> {
    */
   public static <T> BaseResponse<T> success(T data, String message) {
     return BaseResponse.<T>builder()
-        .success(200)
+        .status(200)
         .message(message)
         .data(data)
         .build();
@@ -60,8 +60,40 @@ public class BaseResponse<T> {
    */
   public static <T> BaseResponse<T> error(String message) {
     return BaseResponse.<T>builder()
-        .success(400)
+        .status(400)
         .message(message)
+        .build();
+  }
+
+  /**
+   * Tạo một phản hồi thất bại với mã lỗi và thông báo lỗi.
+   *
+   * @param status  Mã lỗi
+   * @param message Thông báo lỗi
+   * @param <T>     Kiểu dữ liệu của dữ liệu phản hồi
+   * @return Đối tượng BaseResponse
+   */
+  public static <T> BaseResponse<T> error(Integer status, String message) {
+    return BaseResponse.<T>builder()
+        .status(status)
+        .message(message)
+        .build();
+  }
+
+  /**
+   * Tạo một phản hồi thất bại với mã lỗi, thông báo lỗi và dữ liệu.
+   *
+   * @param status  Mã lỗi
+   * @param message Thông báo lỗi
+   * @param data    Dữ liệu phản hồi
+   * @param <T>     Kiểu dữ liệu của dữ liệu phản hồi
+   * @return Đối tượng BaseResponse
+   */
+  public static <T> BaseResponse<T> error(Integer status, String message, T data) {
+    return BaseResponse.<T>builder()
+        .status(status)
+        .message(message)
+        .data(data)
         .build();
   }
 }

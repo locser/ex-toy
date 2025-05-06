@@ -83,6 +83,21 @@ public class EventApplicationServiceImpl implements EventApplicationService {
         .collect(Collectors.toList());
   }
 
+  @Override
+  public List<EventDTO> getAllEvents(int status, String sortBy, String sortDirection) {
+    List<Event> events;
+
+    if (status != EventStatus.ALL.getValue()) {
+      events = eventRepository.findByStatus(status, sortBy, sortDirection);
+    } else {
+      events = eventRepository.findAll(sortBy, sortDirection);
+    }
+
+    return events.stream()
+        .map(this::mapToDTO)
+        .collect(Collectors.toList());
+  }
+
   public EventDTO getEventById(Long id) {
     Event event = eventDomainService.getEventById(id);
     return mapToDTO(event);
@@ -137,9 +152,15 @@ public class EventApplicationServiceImpl implements EventApplicationService {
 
   @Override
   public PageResponse<EventDTO> getEventsWithPagination(int page, int limit, int status) {
+    // Mặc định sắp xếp theo id tăng dần
+    return getEventsWithPagination(page, limit, status, "id", "asc");
+  }
 
-    // Lấy danh sách sự kiện theo trang
-    List<Event> events = eventRepository.findWithPagination(page, limit, status);
+  @Override
+  public PageResponse<EventDTO> getEventsWithPagination(int page, int limit, int status, String sortBy,
+      String sortDirection) {
+    // Lấy danh sách sự kiện theo trang và sắp xếp
+    List<Event> events = eventRepository.findWithPagination(page - 1, limit, status, sortBy, sortDirection);
 
     // Đếm tổng số sự kiện
     long totalRecords = eventRepository.count(status);
@@ -151,5 +172,10 @@ public class EventApplicationServiceImpl implements EventApplicationService {
 
     // Tạo đối tượng phân trang
     return PageResponse.of(eventDTOs, limit, totalRecords);
+  }
+
+  @Override
+  public void updateEventStatus(Long id, Integer status) {
+    eventDomainService.updateEventStatus(id, status);
   }
 }

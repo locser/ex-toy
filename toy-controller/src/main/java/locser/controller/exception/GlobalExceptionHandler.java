@@ -5,10 +5,10 @@ import java.util.Map;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
-import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import locser.controller.response.BaseResponse;
@@ -17,6 +17,7 @@ import locser.toy.domain.exception.ResourceNotFoundException;
 
 /**
  * Xử lý ngoại lệ toàn cục cho tất cả các controller.
+ * Tất cả các phản hồi đều có cùng một cấu trúc và trả về mã HTTP 200 OK.
  */
 @RestControllerAdvice
 public class GlobalExceptionHandler {
@@ -28,12 +29,11 @@ public class GlobalExceptionHandler {
    * @return Phản hồi lỗi
    */
   @ExceptionHandler(ResourceNotFoundException.class)
-  @ResponseStatus(HttpStatus.NOT_FOUND)
   public ResponseEntity<BaseResponse<Object>> handleResourceNotFoundException(
       ResourceNotFoundException ex) {
     return ResponseEntity
-        .status(HttpStatus.NOT_FOUND)
-        .body(BaseResponse.error(ex.getMessage()));
+        .status(HttpStatus.OK)
+        .body(BaseResponse.error(404, ex.getMessage()));
   }
 
   /**
@@ -43,11 +43,10 @@ public class GlobalExceptionHandler {
    * @return Phản hồi lỗi
    */
   @ExceptionHandler(BadRequestException.class)
-  @ResponseStatus(HttpStatus.BAD_REQUEST)
   public ResponseEntity<BaseResponse<Object>> handleBadRequestException(BadRequestException ex) {
     return ResponseEntity
-        .status(HttpStatus.BAD_REQUEST)
-        .body(BaseResponse.error(ex.getMessage()));
+        .status(HttpStatus.OK)
+        .body(BaseResponse.error(400, ex.getMessage()));
   }
 
   /**
@@ -57,7 +56,6 @@ public class GlobalExceptionHandler {
    * @return Phản hồi lỗi
    */
   @ExceptionHandler(MethodArgumentNotValidException.class)
-  @ResponseStatus(HttpStatus.BAD_REQUEST)
   public ResponseEntity<BaseResponse<Map<String, String>>> handleValidationExceptions(
       MethodArgumentNotValidException ex) {
     Map<String, String> errors = new HashMap<>();
@@ -68,8 +66,22 @@ public class GlobalExceptionHandler {
     });
 
     return ResponseEntity
-        .status(HttpStatus.BAD_REQUEST)
-        .body(BaseResponse.error("Lỗi validation"));
+        .status(HttpStatus.OK)
+        .body(BaseResponse.error(400, "Lỗi validation", errors));
+  }
+
+  /**
+   * Xử lý ngoại lệ HttpMessageNotReadableException (lỗi chuyển đổi JSON).
+   *
+   * @param ex Ngoại lệ
+   * @return Phản hồi lỗi
+   */
+  @ExceptionHandler(HttpMessageNotReadableException.class)
+  public ResponseEntity<BaseResponse<Object>> handleHttpMessageNotReadableException(
+      HttpMessageNotReadableException ex) {
+    return ResponseEntity
+        .status(HttpStatus.OK)
+        .body(BaseResponse.error(400, "Lỗi định dạng dữ liệu: " + ex.getMessage()));
   }
 
   /**
@@ -79,10 +91,10 @@ public class GlobalExceptionHandler {
    * @return Phản hồi lỗi
    */
   @ExceptionHandler(Exception.class)
-  @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
   public ResponseEntity<BaseResponse<Object>> handleAllExceptions(Exception ex) {
+    System.out.println("Lỗi hệ thống: " + ex);
     return ResponseEntity
-        .status(HttpStatus.INTERNAL_SERVER_ERROR)
-        .body(BaseResponse.error("Lỗi hệ thống: " + ex.getMessage()));
+        .status(HttpStatus.OK)
+        .body(BaseResponse.error(500, "Lỗi hệ thống: " + ex.getMessage()));
   }
 }

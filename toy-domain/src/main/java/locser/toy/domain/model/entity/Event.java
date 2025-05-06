@@ -9,19 +9,18 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import jakarta.persistence.Version;
-import locser.toy.domain.model.enums.EventStatus;
 import lombok.AllArgsConstructor;
-import lombok.Getter;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
 
+@EqualsAndHashCode(callSuper = true)
 @Entity
 @Table(name = "events")
-@Getter
-@Setter
+@Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class Event {
+public class Event extends DateAudit {
 
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -46,32 +45,17 @@ public class Event {
   private String rules;
 
   @Column(name = "status", nullable = false, columnDefinition = "INT DEFAULT 0")
-  private Integer status = EventStatus.UPCOMING.getValue();
+  private Integer status;
 
-  @Column(name = "created_at", nullable = false, columnDefinition = "DATETIME DEFAULT CURRENT_TIMESTAMP")
-  private LocalDateTime createdAt;
+  // @Column(name = "created_at", nullable = false, columnDefinition = "DATETIME
+  // DEFAULT CURRENT_TIMESTAMP")
+  // @Cre
+  // private LocalDateTime createdAt;
 
-  @Column(name = "updated_at", nullable = false, columnDefinition = "DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP")
-  private LocalDateTime updatedAt;
+  // @Column(name = "updated_at", nullable = false, columnDefinition = "DATETIME
+  // DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP")
+  // private LocalDateTime updatedAt;
 
   @Version
   private Long version = 0L;
 }
-
-// //CREATE TABLE events (
-// campaign_id BIGINT AUTO_INCREMENT PRIMARY KEY,
-// name VARCHAR(255) NOT NULL,
-// description TEXT NULL,
-// start_date DATETIME NOT NULL,
-// end_date DATETIME NOT NULL,
-// theme VARCHAR(100) NULL,
-// rules JSON NULL, -- Lưu trữ các quy tắc phức tạp (số lượng đồ chơi tối đa,
-// loại, điều kiện...)
-// status ENUM('UPCOMING', 'ACTIVE', 'PAST', 'DELETED') NOT NULL DEFAULT
-// 'UPCOMING',
-// created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-// updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-// );
-
-// ALTER TABLE events ADD INDEX idx_events_status (status);
-// ALTER TABLE events ADD INDEX idx_events_dates (start_date, end_date);

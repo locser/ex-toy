@@ -4,6 +4,7 @@ import locser.toy.domain.exception.BadRequestException;
 
 public class AppUtils {
 	public static void validatePageNumberAndSize(int page, int size) {
+		System.out.println("page: " + page + " size: " + size);
 		if (page < 0) {
 			throw new BadRequestException(
 					"Page number cannot be less than zero.");

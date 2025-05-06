@@ -1,5 +1,6 @@
 package locser.toy.domain.model.dto;
 
+import java.time.Instant;
 import java.time.LocalDateTime;
 
 import lombok.AllArgsConstructor;
@@ -24,6 +25,6 @@ public class EventDTO {
     private String theme;
     private String rules;
     private Integer status;
-    private LocalDateTime createdAt;
-    private LocalDateTime updatedAt;
+    private Instant createdAt;
+    private Instant updatedAt;
 }

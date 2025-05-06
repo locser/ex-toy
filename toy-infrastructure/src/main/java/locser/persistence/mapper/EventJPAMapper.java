@@ -5,6 +5,7 @@ import java.util.Optional;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import locser.toy.domain.model.entity.Event;
@@ -14,6 +15,8 @@ public interface EventJPAMapper extends JpaRepository<Event, Long> {
     Optional<Event> findOneById(Long id);
 
     List<Event> findByStatus(int status);
+
+    List<Event> findByStatus(int status, Sort sort);
 
     /**
      * Lấy danh sách sự kiện theo trạng thái với phân trang.

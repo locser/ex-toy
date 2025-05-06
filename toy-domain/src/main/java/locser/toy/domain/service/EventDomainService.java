@@ -1,7 +1,7 @@
 package locser.toy.domain.service;
 
+import locser.toy.domain.exception.ResourceNotFoundException;
 import locser.toy.domain.model.entity.Event;
-
 
 /**
  * Interface định nghĩa các dịch vụ miền cho Event.
@@ -39,4 +39,6 @@ public interface EventDomainService {
    * @param id ID của sự kiện cần xóa
    */
   void deleteEvent(Long id);
+
+  void updateEventStatus(Long id, Integer status);
 }

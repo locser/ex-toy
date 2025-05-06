@@ -1,5 +1,10 @@
 package locser.controller.mapper;
 
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.List;
+import java.util.stream.Collectors;
+
 import locser.controller.dto.CreateEventRequestDTO;
 import locser.controller.dto.EventResponseDTO;
 import locser.controller.dto.PageResponseDTO;
@@ -8,9 +13,6 @@ import locser.toy.domain.model.dto.CreateEventRequest;
 import locser.toy.domain.model.dto.EventDTO;
 import locser.toy.domain.model.dto.PageResponse;
 import locser.toy.domain.model.dto.UpdateEventRequest;
-
-import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  * Mapper class to convert between domain DTOs and controller DTOs.
@@ -27,12 +29,14 @@ public class EventDTOMapper {
         if (dto == null) {
             return null;
         }
-        
+
         return CreateEventRequest.builder()
                 .name(dto.getName())
                 .description(dto.getDescription())
-                .startDate(dto.getStartDate())
-                .endDate(dto.getEndDate())
+                .startDate(LocalDateTime.parse(dto.getStartDate() + " 00:00:00",
+                        DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss")))
+                .endDate(LocalDateTime.parse(dto.getEndDate() + " 23:59:59",
+                        DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss")))
                 .theme(dto.getTheme())
                 .rules(dto.getRules())
                 .build();
@@ -48,12 +52,14 @@ public class EventDTOMapper {
         if (dto == null) {
             return null;
         }
-        
+
         return UpdateEventRequest.builder()
                 .name(dto.getName())
                 .description(dto.getDescription())
-                .startDate(dto.getStartDate())
-                .endDate(dto.getEndDate())
+                .startDate(LocalDateTime.parse(dto.getStartDate() + " 00:00:00",
+                        DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss")))
+                .endDate(LocalDateTime.parse(dto.getEndDate() + " 23:59:59",
+                        DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss")))
                 .theme(dto.getTheme())
                 .rules(dto.getRules())
                 .status(dto.getStatus())
@@ -70,13 +76,17 @@ public class EventDTOMapper {
         if (dto == null) {
             return null;
         }
-        
+
         return EventResponseDTO.builder()
                 .id(dto.getId())
                 .name(dto.getName())
                 .description(dto.getDescription())
-                .startDate(dto.getStartDate())
-                .endDate(dto.getEndDate())
+                .startDate(LocalDateTime.parse(dto.getStartDate() + " 00:00:00",
+                        DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss")))
+                .endDate(LocalDateTime.parse(dto.getEndDate() + " 23:59:59",
+                        DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss")))
+                // .startDate(dto.getStartDate())
+                // .endDate(dto.getEndDate())
                 .theme(dto.getTheme())
                 .rules(dto.getRules())
                 .status(dto.getStatus())
@@ -95,7 +105,7 @@ public class EventDTOMapper {
         if (dtos == null) {
             return null;
         }
-        
+
         return dtos.stream()
                 .map(EventDTOMapper::toEventResponseDTO)
                 .collect(Collectors.toList());
@@ -111,13 +121,12 @@ public class EventDTOMapper {
         if (pageResponse == null) {
             return null;
         }
-        
+
         List<EventResponseDTO> responseDTOs = toEventResponseDTOs(pageResponse.getList());
-        
+
         return PageResponseDTO.of(
                 responseDTOs,
                 pageResponse.getLimit(),
-                pageResponse.getTotalRecord()
-        );
+                pageResponse.getTotalRecord());
     }
 }

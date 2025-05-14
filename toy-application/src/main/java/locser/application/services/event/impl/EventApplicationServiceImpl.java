@@ -1,4 +1,4 @@
-package locser.application.services.event.impl;// toy-application/src/main/java/locser/toy/application/service/EventApplicationService.java
+package locser.application.services.event.impl;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -14,21 +14,17 @@ import locser.toy.domain.model.entity.Event;
 import locser.toy.domain.model.enums.EventStatus;
 import locser.toy.domain.repository.EventRepository;
 import locser.toy.domain.service.EventDomainService;
+import lombok.RequiredArgsConstructor;
 
 /**
  * Lớp dịch vụ ứng dụng cho Event, điều phối các use case.
  */
 @Service
+@RequiredArgsConstructor
 public class EventApplicationServiceImpl implements EventApplicationService {
 
   private final EventRepository eventRepository;
   private final EventDomainService eventDomainService;
-
-  public EventApplicationServiceImpl(EventRepository eventRepository,
-      EventDomainService eventDomainService) {
-    this.eventRepository = eventRepository;
-    this.eventDomainService = eventDomainService;
-  }
 
   /**
    * Chuyển đổi từ Entity sang DTO.

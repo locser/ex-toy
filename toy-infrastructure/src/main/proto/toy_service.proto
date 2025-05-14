@@ -1,0 +1,92 @@
+syntax = "proto3";
+
+option java_multiple_files = true;
+option java_package = "locser.infrastructure.grpc";
+option java_outer_classname = "ToyServiceProto";
+
+package toy;
+
+// The toy service definition
+service ToyService {
+  // Get toy by ID
+  rpc GetToy (ToyRequest) returns (ToyResponse) {}
+  
+  // Create a new toy
+  rpc CreateToy (CreateToyRequest) returns (ToyResponse) {}
+  
+  // Update an existing toy
+  rpc UpdateToy (UpdateToyRequest) returns (ToyResponse) {}
+  
+  // Delete a toy
+  rpc DeleteToy (ToyRequest) returns (DeleteToyResponse) {}
+  
+  // List toys with pagination
+  rpc ListToys (ListToysRequest) returns (ListToysResponse) {}
+}
+
+// Request message for getting a toy by ID
+message ToyRequest {
+  int64 id = 1;
+}
+
+// Response message for delete operation
+message DeleteToyResponse {
+  bool success = 1;
+  string message = 2;
+}
+
+// Request message for creating a toy
+message CreateToyRequest {
+  int64 user_id = 1;
+  string name = 2;
+  string description = 3;
+  string category = 4;
+  int32 condition = 5;
+  int64 campaign_id = 6;
+  string desired_exchange_items = 7;
+}
+
+// Request message for updating a toy
+message UpdateToyRequest {
+  int64 id = 1;
+  string name = 2;
+  string description = 3;
+  string category = 4;
+  int32 condition = 5;
+  int32 status = 6;
+  int64 campaign_id = 7;
+  string desired_exchange_items = 8;
+}
+
+// Request message for listing toys with pagination
+message ListToysRequest {
+  int32 page = 1;
+  int32 limit = 2;
+  optional int64 user_id = 3;
+  optional int32 status = 4;
+  optional int64 campaign_id = 5;
+  string sort_by = 6;
+  string sort_direction = 7;
+}
+
+// Response message containing a list of toys
+message ListToysResponse {
+  repeated ToyResponse toys = 1;
+  int32 limit = 2;
+  int64 total_record = 3;
+}
+
+// The toy data
+message ToyResponse {
+  int64 id = 1;
+  int64 user_id = 2;
+  int64 campaign_id = 3;
+  string name = 4;
+  string description = 5;
+  string category = 6;
+  int32 condition = 7;
+  int32 status = 8;
+  string desired_exchange_items = 9;
+  string created_at = 10;
+  string updated_at = 11;
+}

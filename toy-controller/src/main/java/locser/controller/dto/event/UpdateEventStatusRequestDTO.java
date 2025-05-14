@@ -1,4 +1,4 @@
-package locser.controller.dto;
+package locser.controller.dto.event;
 
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;

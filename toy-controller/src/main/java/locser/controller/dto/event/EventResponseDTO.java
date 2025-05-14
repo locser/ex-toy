@@ -1,5 +1,6 @@
-package locser.controller.dto;
+package locser.controller.dto.event;
 
+import java.time.Instant;
 import java.time.LocalDateTime;
 
 import lombok.AllArgsConstructor;
@@ -8,13 +9,14 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 /**
- * DTO đại diện cho yêu cầu cập nhật một Sự kiện/Chiến dịch.
+ * DTO đại diện cho thông tin của một Sự kiện/Chiến dịch trong phản hồi API.
  */
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class UpdateEventRequestDTO {
+public class EventResponseDTO {
+    private Long id;
     private String name;
     private String description;
     private LocalDateTime startDate;
@@ -22,4 +24,6 @@ public class UpdateEventRequestDTO {
     private String theme;
     private String rules;
     private Integer status;
+    private Instant createdAt;
+    private Instant updatedAt;
 }

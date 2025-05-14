@@ -1,4 +1,4 @@
-package locser.controller.dto;
+package locser.controller.dto.event;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 

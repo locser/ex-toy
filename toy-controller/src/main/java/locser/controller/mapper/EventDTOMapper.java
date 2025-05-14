@@ -5,10 +5,10 @@ import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import locser.controller.dto.CreateEventRequestDTO;
-import locser.controller.dto.EventResponseDTO;
 import locser.controller.dto.PageResponseDTO;
-import locser.controller.dto.UpdateEventRequestDTO;
+import locser.controller.dto.event.CreateEventRequestDTO;
+import locser.controller.dto.event.EventResponseDTO;
+import locser.controller.dto.event.UpdateEventRequestDTO;
 import locser.toy.domain.model.dto.CreateEventRequest;
 import locser.toy.domain.model.dto.EventDTO;
 import locser.toy.domain.model.dto.PageResponse;

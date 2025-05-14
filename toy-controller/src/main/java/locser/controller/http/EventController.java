@@ -13,11 +13,11 @@ import org.springframework.web.bind.annotation.RestController;
 
 import jakarta.validation.Valid;
 import locser.application.services.event.EventApplicationService;
-import locser.controller.dto.CreateEventRequestDTO;
-import locser.controller.dto.EventResponseDTO;
 import locser.controller.dto.PageResponseDTO;
-import locser.controller.dto.UpdateEventRequestDTO;
-import locser.controller.dto.UpdateEventStatusRequestDTO;
+import locser.controller.dto.event.CreateEventRequestDTO;
+import locser.controller.dto.event.EventResponseDTO;
+import locser.controller.dto.event.UpdateEventRequestDTO;
+import locser.controller.dto.event.UpdateEventStatusRequestDTO;
 import locser.controller.mapper.EventDTOMapper;
 import locser.controller.response.BaseResponse;
 import locser.toy.domain.model.dto.EventDTO;
@@ -116,7 +116,8 @@ public class EventController {
          * @return Sự kiện đã được cập nhật
          */
         @PostMapping("/admin/campaigns/{id}")
-        public BaseResponse updateEvent(@ValidId(entity = "Event") @PathVariable Long id, @RequestBody UpdateEventRequestDTO requestDTO) {
+        public BaseResponse updateEvent(@ValidId(entity = "Event") @PathVariable Long id,
+                        @RequestBody UpdateEventRequestDTO requestDTO) {
                 eventService.updateEvent(id, EventDTOMapper.toUpdateEventRequest(requestDTO));
                 return BaseResponse.success();
         }

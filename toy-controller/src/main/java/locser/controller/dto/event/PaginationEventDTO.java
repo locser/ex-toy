@@ -1,5 +1,6 @@
-package locser.controller.dto;
+package locser.controller.dto.event;
 
+import locser.controller.dto.PaginationDTO;
 import locser.toy.domain.model.enums.EventStatus;
 import lombok.Getter;
 

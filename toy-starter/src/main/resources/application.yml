@@ -61,6 +61,8 @@ spring:
       enabled: true
   main:
     allow-bean-definition-overriding: true
+  profiles:
+    active: #kafka,grpc,grpc-client
 resilience4j:
   circuitbreaker:
     instances:

@@ -46,10 +46,24 @@ Tài liệu này phác thảo các yêu cầu chức năng và phi chức năng 
 
 ### Quản Lý Chiến Dịch
 
+#### Chiến Dịch Trao Đổi (Exchange Campaign)
+
 - **C-001:** Là quản trị viên, tôi muốn tạo một chiến dịch trao đổi mới với các cài đặt cụ thể.
 - **C-002:** Là quản trị viên, tôi muốn xem, chỉnh sửa và xóa các chiến dịch hiện có.
 - **C-003:** Là bất kỳ người dùng nào, tôi muốn xem các chiến dịch đang hoạt động và đã kết thúc.
 - **C-004:** Là bất kỳ người dùng nào, tôi muốn xem các cài đặt và quy tắc cụ thể cho mỗi chiến dịch.
+
+#### Chiến Dịch Phát Đồ Chơi (Toy Giveaway Campaign) - MỚI
+
+- **TC-001:** Là quản trị viên, tôi muốn tạo một chiến dịch phát đồ chơi với số lượng toy giới hạn.
+- **TC-002:** Là quản trị viên, tôi muốn thêm các toy hiện có vào chiến dịch phát đồ chơi.
+- **TC-003:** Là quản trị viên, tôi muốn xem thống kê chiến dịch (số người tham gia, số toy còn lại).
+- **TC-004:** Là người dùng đã đăng nhập, tôi muốn xem danh sách chiến dịch phát toy đang diễn ra.
+- **TC-005:** Là người dùng đã đăng nhập, tôi muốn nhấn nút "Nhận toy" để tham gia chiến dịch.
+- **TC-006:** Là người dùng đã đăng nhập, tôi muốn xem lịch sử các chiến dịch đã tham gia.
+- **TC-007:** Là người dùng đã đăng nhập, tôi muốn nhận thông báo khi chiến dịch mới được tạo.
+- **TC-008:** Là hệ thống, tôi cần đảm bảo không có race condition khi nhiều user cùng nhận toy.
+- **TC-009:** Là hệ thống, tôi cần tự động đóng chiến dịch khi hết toy hoặc hết thời gian.
 
 ### Quy Trình Trao Đổi
 
@@ -89,6 +103,13 @@ Tài liệu này phác thảo các yêu cầu chức năng và phi chức năng 
 - Hỗ trợ tối thiểu 1000 người dùng đồng thời
 - Xử lý upload ảnh nhanh chóng với CDN
 
+#### Yêu Cầu Đặc Biệt Cho Chiến Dịch Phát Đồ Chơi
+
+- **Concurrency**: Xử lý tối thiểu 100 request đồng thời cho việc nhận toy
+- **Consistency**: Đảm bảo không có duplicate toy allocation
+- **Performance**: API nhận toy phải phản hồi < 200ms
+- **Availability**: Uptime 99.9% trong thời gian chiến dịch diễn ra
+
 ### Bảo Mật
 
 - Sử dụng Spring Security cho xác thực và phân quyền
@@ -119,3 +140,144 @@ Tài liệu này phác thảo các yêu cầu chức năng và phi chức năng 
 - RabbitMQ (messaging)
 - Docker
 - Kubernetes (optional)
+
+## Kế Hoạch Triển Khai Chiến Dịch Phát Quà
+
+### Level 1: Basic Implementation (1-100 users)
+
+#### Mục tiêu
+
+- Triển khai chức năng cơ bản cho chiến dịch phát quà
+- Hỗ trợ tối đa 100 người dùng đồng thời
+- Đảm bảo tính nhất quán cơ bản
+
+#### Thành phần cần triển khai
+
+**1. Domain Layer**
+
+- `GiftCampaign` entity với các trường cơ bản
+- `GiftParticipation` entity để lưu lịch sử tham gia
+- `CampaignType` enum (EXCHANGE, GIFT)
+- `GiftCampaignStatus` enum
+- Domain services cho business logic
+
+**2. Application Layer**
+
+- `GiftCampaignApplicationService`
+- DTOs cho request/response
+- Validation cơ bản
+
+**3. Infrastructure Layer**
+
+- Repository implementations
+- Database migrations
+
+**4. Controller Layer**
+
+- REST APIs cho CRUD operations
+- API tham gia chiến dịch
+
+#### Ước tính thời gian: 2-3 tuần
+
+### Level 2: Intermediate Implementation (100-1000 users)
+
+#### Mục tiêu
+
+- Tối ưu hóa performance với caching
+- Xử lý concurrency tốt hơn
+- Thêm monitoring và logging
+
+#### Cải tiến
+
+**1. Performance Optimization**
+
+- Redis caching cho campaign data
+- Database indexing optimization
+- Connection pooling tuning
+
+**2. Concurrency Control**
+
+- Optimistic locking với version field
+- Retry mechanism cho failed requests
+- Rate limiting
+
+**3. Monitoring & Observability**
+
+- Metrics cho campaign participation
+- Logging cho audit trail
+- Health checks
+
+**4. API Enhancements**
+
+- Pagination cho danh sách campaigns
+- Advanced filtering và sorting
+- Bulk operations
+
+#### Ước tính thời gian: 3-4 tuần
+
+### Level 3: Advanced Implementation (1000+ users)
+
+#### Mục tiêu
+
+- Xử lý high-traffic scenarios
+- Distributed system considerations
+- Advanced features
+
+#### Cải tiến
+
+**1. Distributed Systems**
+
+- Redis distributed locking
+- Database sharding strategies
+- Load balancing considerations
+
+**2. Event-Driven Architecture**
+
+- RabbitMQ cho async processing
+- Event sourcing cho audit
+- CQRS pattern implementation
+
+**3. Advanced Features**
+
+- Real-time notifications với WebSocket
+- Advanced analytics và reporting
+- A/B testing framework
+
+**4. Scalability**
+
+- Horizontal scaling strategies
+- Microservices decomposition
+- CDN cho static assets
+
+#### Ước tính thời gian: 4-6 tuần
+
+### Roadmap Tổng Thể
+
+```
+Tuần 1-3:   Level 1 - Basic Implementation
+Tuần 4-7:   Level 2 - Performance & Monitoring
+Tuần 8-13:  Level 3 - Advanced Features
+Tuần 14:    Testing & Documentation
+Tuần 15:    Deployment & Go-live
+```
+
+### Metrics Đánh Giá
+
+**Level 1:**
+
+- API response time < 500ms
+- Support 100 concurrent users
+- 0% data inconsistency
+
+**Level 2:**
+
+- API response time < 300ms
+- Support 1000 concurrent users
+- 99.5% uptime
+
+**Level 3:**
+
+- API response time < 200ms
+- Support 10000+ concurrent users
+- 99.9% uptime
+- Real-time notifications < 1s delay

@@ -2,16 +2,14 @@ package locser.persistence.repository;
 
 import java.util.List;
 import java.util.Optional;
-
+import locser.persistence.mapper.ToyJPAMapper;
+import locser.toy.domain.model.entity.Toy;
+import locser.toy.domain.repository.ToyRepository;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Direction;
 import org.springframework.stereotype.Service;
-
-import locser.persistence.mapper.ToyJPAMapper;
-import locser.toy.domain.model.entity.Toy;
-import locser.toy.domain.repository.ToyRepository;
 
 /**
  * Implementation of ToyRepository using JPA.
@@ -77,7 +75,8 @@ public class ToyInfrasRepositoryImpl implements ToyRepository {
   }
 
   @Override
-  public List<Toy> findWithPagination(int page, int size, Long userId, Integer status, Long campaignId, String sortBy, String sortDirection) {
+  public List<Toy> findWithPagination(int page, int size, Long userId, Integer status,
+      Long campaignId, String sortBy, String sortDirection) {
     Sort sort = createSort(sortBy, sortDirection);
     Pageable pageable = PageRequest.of(page, size, sort);
 
@@ -135,6 +134,26 @@ public class ToyInfrasRepositoryImpl implements ToyRepository {
       // Đếm tất cả
       return toyJPAMapper.count();
     }
+  }
+
+  @Override
+  public List<Toy> findByCampaignIdAndStatus(Long campaignId, Integer status) {
+    return List.of();
+  }
+
+  @Override
+  public long countByCampaignIdAndStatus(Long campaignId, Integer status) {
+    return 0;
+  }
+
+  @Override
+  public int updateStatusByCampaignId(Long campaignId, Integer oldStatus, Integer newStatus) {
+    return 0;
+  }
+
+  @Override
+  public int addToysToCampaign(List<Long> toyIds, Long campaignId, Integer newStatus) {
+    return 0;
   }
 
   /**

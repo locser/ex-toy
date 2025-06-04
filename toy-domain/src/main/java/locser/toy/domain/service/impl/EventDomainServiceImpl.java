@@ -37,7 +37,7 @@ public class EventDomainServiceImpl implements EventDomainService {
   public Event getEventById(Long id) {
     // Kiểm tra ID phải lớn hơn 0
     IdValidator.validateId(id, "Event");
-    
+
     return eventRepository.findOneById(id)
         .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy sự kiện với ID: " + id));
   }
@@ -54,7 +54,7 @@ public class EventDomainServiceImpl implements EventDomainService {
   public void deleteEvent(Long id) {
     // Kiểm tra ID phải lớn hơn 0
     IdValidator.validateId(id, "Event");
-    
+
     Event event = getEventById(id);
 
     // Soft delete: Chỉ đánh dấu là đã xóa
@@ -77,7 +77,7 @@ public class EventDomainServiceImpl implements EventDomainService {
   public void updateEventStatus(Long id, Integer status) {
     // Kiểm tra ID phải lớn hơn 0
     IdValidator.validateId(id, "Event");
-    
+
     Event event = getEventById(id);
 
     event.setStatus(status);

@@ -10,11 +10,11 @@ import lombok.extern.slf4j.Slf4j;
  * This service is only active when the "grpc" profile is active.
  *
  * NOTE: This is a placeholder class. The actual implementation will be
- * 
+ *
  * available
- * 
+ *
  * after compiling the proto files. This class should be replaced with the
- * 
+ *
  * proper
  * implementation that extends the generated ToyServiceGrpc.ToyServiceImplBase
  * class.

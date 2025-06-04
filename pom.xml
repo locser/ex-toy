@@ -32,6 +32,7 @@
     </properties>
 
     <modules>
+        <module>common</module>
         <module>toy-starter</module>
         <module>toy-controller</module>
         <module>toy-domain</module>
@@ -59,6 +60,8 @@
 		<dependency>
 			<groupId>org.projectlombok</groupId>
 			<artifactId>lombok</artifactId>
+			<version>1.18.30</version>
+			<scope>provided</scope>
 		</dependency>
 		<dependency>
 			<groupId>io.github.resilience4j</groupId>

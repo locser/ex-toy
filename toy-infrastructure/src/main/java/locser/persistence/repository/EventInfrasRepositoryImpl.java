@@ -2,24 +2,22 @@ package locser.persistence.repository;
 
 import java.util.List;
 import java.util.Optional;
-
+import locser.persistence.mapper.EventJPAMapper;
+import locser.toy.domain.model.entity.Event;
+import locser.toy.domain.model.enums.EventStatus;
+import locser.toy.domain.repository.EventRepository;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Direction;
 import org.springframework.stereotype.Service;
 
-import locser.persistence.mapper.EventJPAMapper;
-import locser.toy.domain.model.entity.Event;
-import locser.toy.domain.model.enums.EventStatus;
-import locser.toy.domain.repository.EventRepository;
-
 @Service
 public class EventInfrasRepositoryImpl implements EventRepository {
 
   private final EventJPAMapper eventJPAMapper;
 
-  EventInfrasRepositoryImpl(EventJPAMapper eventJPAMapper) {
+  public EventInfrasRepositoryImpl(EventJPAMapper eventJPAMapper) {
     this.eventJPAMapper = eventJPAMapper;
   }
 
@@ -61,12 +59,14 @@ public class EventInfrasRepositoryImpl implements EventRepository {
   }
 
   @Override
-  public List<Event> findWithPagination(int page, int size, int status, String sortBy, String sortDirection) {
+  public List<Event> findWithPagination(int page, int size, int status, String sortBy,
+      String sortDirection) {
     Sort sort = createSort(sortBy, sortDirection);
     Pageable pageable = PageRequest.of(page, size, sort);
 
-    System.out.println("page: " + page + ", size: " + size + ", status: " + status + ", sortBy: " + sortBy
-        + ", sortDirection: " + sortDirection);
+    System.out.println(
+        "page: " + page + ", size: " + size + ", status: " + status + ", sortBy: " + sortBy
+            + ", sortDirection: " + sortDirection);
 
     if (status != EventStatus.ALL.getValue()) {
       return eventJPAMapper.findByStatus(status, pageable).getContent();
@@ -82,6 +82,27 @@ public class EventInfrasRepositoryImpl implements EventRepository {
     } else {
       return eventJPAMapper.count();
     }
+  }
+
+  @Override
+  public List<Event> findByType(Integer type) {
+    return List.of();
+  }
+
+  @Override
+  public List<Event> findByTypeWithPagination(Integer type, int page, int size, Integer status,
+      String sortBy, String sortDirection) {
+    return List.of();
+  }
+
+  @Override
+  public Optional<Event> findByIdAndType(Long id, Integer type) {
+    return Optional.empty();
+  }
+
+  @Override
+  public long countByType(Integer type, Integer status) {
+    return 0;
   }
 
   /**

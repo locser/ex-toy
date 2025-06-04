@@ -9,7 +9,9 @@ public enum ToyStatus {
     IN_EXCHANGE, // 2
     EXCHANGED, // 3
     REMOVED, // 4
-    AWAITING_APPROVAL // 5
+    AWAITING_APPROVAL, // 5
+    GIVEAWAY_AVAILABLE, // 6 - Available for giveaway campaign
+    GIVEAWAY_CLAIMED // 7 - Claimed in giveaway campaign
     ;
 
     public int getValue() {

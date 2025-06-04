@@ -1,7 +1,5 @@
 package locser.toy.domain.service.impl;
 
-import org.springframework.stereotype.Service;
-
 import locser.toy.domain.exception.BadRequestException;
 import locser.toy.domain.exception.ResourceNotFoundException;
 import locser.toy.domain.model.entity.Toy;
@@ -9,12 +7,14 @@ import locser.toy.domain.model.enums.ToyStatus;
 import locser.toy.domain.repository.ToyRepository;
 import locser.toy.domain.service.ToyDomainService;
 import locser.toy.domain.validation.IdValidator;
+import org.springframework.stereotype.Service;
 
 /**
  * Triển khai các dịch vụ miền cho Toy.
  */
 @Service
 public class ToyDomainServiceImpl implements ToyDomainService {
+
 
   private final ToyRepository toyRepository;
 
@@ -37,7 +37,7 @@ public class ToyDomainServiceImpl implements ToyDomainService {
   public Toy getToyById(Long id) {
     // Kiểm tra ID phải lớn hơn 0
     IdValidator.validateId(id, "Toy");
-    
+
     return toyRepository.findOneById(id)
         .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy đồ chơi với ID: " + id));
   }
@@ -54,7 +54,7 @@ public class ToyDomainServiceImpl implements ToyDomainService {
   public void deleteToy(Long id) {
     // Kiểm tra ID phải lớn hơn 0
     IdValidator.validateId(id, "Toy");
-    
+
     Toy toy = getToyById(id);
 
     // Soft delete: Chỉ đánh dấu là đã xóa
@@ -66,7 +66,7 @@ public class ToyDomainServiceImpl implements ToyDomainService {
   public void updateToyStatus(Long id, Integer status) {
     // Kiểm tra ID phải lớn hơn 0
     IdValidator.validateId(id, "Toy");
-    
+
     Toy toy = getToyById(id);
 
     toy.setStatus(status);
@@ -79,16 +79,16 @@ public class ToyDomainServiceImpl implements ToyDomainService {
     // Kiểm tra ID phải lớn hơn 0
     IdValidator.validateId(id, "Toy");
     IdValidator.validateId(campaignId, "Campaign");
-    
+
     Toy toy = getToyById(id);
-    
+
     // Kiểm tra trạng thái đồ chơi
     if (toy.getStatus() != ToyStatus.AVAILABLE.getValue()) {
       throw new BadRequestException("Đồ chơi không khả dụng để thêm vào chiến dịch");
     }
-    
+
     toy.setCampaignId(campaignId);
-    
+
     return toyRepository.save(toy);
   }
 
@@ -96,16 +96,16 @@ public class ToyDomainServiceImpl implements ToyDomainService {
   public Toy removeFromCampaign(Long id) {
     // Kiểm tra ID phải lớn hơn 0
     IdValidator.validateId(id, "Toy");
-    
+
     Toy toy = getToyById(id);
-    
+
     // Kiểm tra đồ chơi có thuộc chiến dịch nào không
     if (toy.getCampaignId() == 0L) {
       throw new BadRequestException("Đồ chơi không thuộc chiến dịch nào");
     }
-    
+
     toy.setCampaignId(0L);
-    
+
     return toyRepository.save(toy);
   }
 
@@ -113,16 +113,16 @@ public class ToyDomainServiceImpl implements ToyDomainService {
   public Toy restoreToy(Long id) {
     // Kiểm tra ID phải lớn hơn 0
     IdValidator.validateId(id, "Toy");
-    
+
     Toy toy = getToyById(id);
-    
+
     // Kiểm tra đồ chơi có bị xóa không
     if (toy.getStatus() != ToyStatus.REMOVED.getValue()) {
       throw new BadRequestException("Đồ chơi không ở trạng thái đã xóa");
     }
-    
+
     toy.setStatus(ToyStatus.AVAILABLE.getValue());
-    
+
     return toyRepository.save(toy);
   }
 
@@ -131,9 +131,9 @@ public class ToyDomainServiceImpl implements ToyDomainService {
     // Kiểm tra ID phải lớn hơn 0
     IdValidator.validateId(userId, "User");
     IdValidator.validateId(toyId, "Toy");
-    
+
     Toy toy = getToyById(toyId);
-    
+
     return toy.getUserId().equals(userId);
   }
 
@@ -144,7 +144,7 @@ public class ToyDomainServiceImpl implements ToyDomainService {
     if (toy.getName() == null || toy.getName().trim().isEmpty()) {
       throw new BadRequestException("Tên đồ chơi không được để trống");
     }
-    
+
     if (toy.getUserId() == null || toy.getUserId() <= 0) {
       throw new BadRequestException("ID người dùng không hợp lệ");
     }

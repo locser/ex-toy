@@ -13,13 +13,13 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import jakarta.validation.Valid;
-import locser.controller.dto.PageResponseDTO;
 import locser.controller.dto.toy.CreateToyRequestDTO;
 import locser.controller.dto.toy.ToyResponseDTO;
 import locser.controller.dto.toy.UpdateToyRequestDTO;
 import locser.controller.response.BaseResponse;
 import locser.controller.service.ToyService;
 import locser.toy.domain.validation.annotation.ValidId;
+import locser.util.PageResponseDTO;
 import locser.utils.AppConstants;
 
 /**

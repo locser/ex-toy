@@ -1,0 +1,201 @@
+package locser.application.services.giveaway.impl;
+
+import java.time.ZoneId;
+import java.util.List;
+import java.util.stream.Collectors;
+
+import org.springframework.stereotype.Service;
+
+import locser.application.services.giveaway.GiveawayCampaignApplicationService;
+import locser.toy.domain.model.dto.AddToysToGiveawayCampaignRequest;
+import locser.toy.domain.model.dto.CreateGiveawayCampaignRequest;
+import locser.toy.domain.model.dto.EventDTO;
+import locser.toy.domain.model.dto.GiveawayCampaignStatsDTO;
+import locser.toy.domain.model.dto.ToyParticipationDTO;
+import locser.toy.domain.model.entity.Event;
+import locser.toy.domain.model.entity.ToyParticipation;
+import locser.toy.domain.model.enums.EventType;
+import locser.toy.domain.repository.EventRepository;
+import locser.toy.domain.service.GiveawayCampaignDomainService;
+import locser.util.PageResponse;
+
+/**
+ * Triển khai các dịch vụ ứng dụng cho Giveaway Campaign.
+ */
+@Service
+public class GiveawayCampaignApplicationServiceImpl implements GiveawayCampaignApplicationService {
+
+  private final GiveawayCampaignDomainService giveawayCampaignDomainService;
+  private final EventRepository eventRepository;
+
+  public GiveawayCampaignApplicationServiceImpl(
+      GiveawayCampaignDomainService giveawayCampaignDomainService,
+      EventRepository eventRepository) {
+    this.giveawayCampaignDomainService = giveawayCampaignDomainService;
+    this.eventRepository = eventRepository;
+  }
+
+  @Override
+  public EventDTO createGiveawayCampaign(CreateGiveawayCampaignRequest request) {
+    // Tạo entity từ request
+    Event campaign = new Event();
+    campaign.setName(request.getName());
+    campaign.setDescription(request.getDescription());
+    campaign.setStartDate(request.getStartDate());
+    campaign.setEndDate(request.getEndDate());
+    campaign.setTheme(request.getTheme());
+    campaign.setRules(request.getRules());
+
+    // Gọi domain service để xử lý logic nghiệp vụ
+    campaign = giveawayCampaignDomainService.initializeNewGiveawayCampaign(campaign);
+
+    // Lưu vào repository
+    Event savedCampaign = eventRepository.save(campaign);
+
+    // Chuyển đổi và trả về DTO
+    return mapToEventDTO(savedCampaign);
+  }
+
+  @Override
+  public EventDTO getGiveawayCampaignById(Long id) {
+    Event campaign = giveawayCampaignDomainService.getGiveawayCampaignById(id);
+    return mapToEventDTO(campaign);
+  }
+
+  @Override
+  public PageResponse<EventDTO> getGiveawayCampaignsWithPagination(
+      int page, int limit, Integer status, String sortBy, String sortDirection) {
+
+    // Convert page from 1-based to 0-based
+    int pageIndex = Math.max(0, page - 1);
+
+    List<Event> campaigns = eventRepository.findByTypeWithPagination(
+        EventType.GIVEAWAY.getValue(), pageIndex, limit, status, sortBy, sortDirection);
+
+    List<EventDTO> campaignDTOs = campaigns.stream()
+        .map(this::mapToEventDTO)
+        .collect(Collectors.toList());
+
+    long total = eventRepository.countByType(EventType.GIVEAWAY.getValue(), status);
+
+    return new PageResponse<>(campaignDTOs, limit, total);
+  }
+
+  @Override
+  public EventDTO updateGiveawayCampaign(Long id, CreateGiveawayCampaignRequest request) {
+    // Lấy campaign hiện tại
+    Event existingCampaign = giveawayCampaignDomainService.getGiveawayCampaignById(id);
+
+    // Cập nhật thông tin
+    existingCampaign.setName(request.getName());
+    existingCampaign.setDescription(request.getDescription());
+    existingCampaign.setStartDate(request.getStartDate());
+    existingCampaign.setEndDate(request.getEndDate());
+    existingCampaign.setTheme(request.getTheme());
+    existingCampaign.setRules(request.getRules());
+
+    // Validate và update
+    existingCampaign = giveawayCampaignDomainService.validateAndUpdateGiveawayCampaign(
+        existingCampaign);
+
+    // Lưu vào repository
+    Event updatedCampaign = eventRepository.save(existingCampaign);
+
+    return mapToEventDTO(updatedCampaign);
+  }
+
+  @Override
+  public void deleteGiveawayCampaign(Long id) {
+    giveawayCampaignDomainService.deleteGiveawayCampaign(id);
+  }
+
+  @Override
+  public int addToysToGiveawayCampaign(Long campaignId, AddToysToGiveawayCampaignRequest request) {
+    return giveawayCampaignDomainService.addToysToGiveawayCampaign(campaignId, request.getToyIds());
+  }
+
+  @Override
+  public GiveawayCampaignStatsDTO getGiveawayCampaignStats(Long campaignId) {
+    Event campaign = giveawayCampaignDomainService.getGiveawayCampaignById(campaignId);
+
+    long totalToys = giveawayCampaignDomainService.countTotalToysInCampaign(campaignId);
+    long availableToys = giveawayCampaignDomainService.countAvailableToysInCampaign(campaignId);
+    long claimedToys = totalToys - availableToys;
+    long totalParticipants = giveawayCampaignDomainService.countCampaignParticipations(campaignId);
+
+    double participationRate = totalToys > 0 ? (double) claimedToys / totalToys * 100 : 0.0;
+
+    return GiveawayCampaignStatsDTO.builder()
+        .campaignId(campaignId)
+        .campaignName(campaign.getName())
+        .totalToys(totalToys)
+        .availableToys(availableToys)
+        .claimedToys(claimedToys)
+        .totalParticipants(totalParticipants)
+        .participationRate(participationRate)
+        .isActive(giveawayCampaignDomainService.isCampaignActive(campaign))
+        .isExpired(giveawayCampaignDomainService.isCampaignExpired(campaign))
+        .build();
+  }
+
+  @Override
+  public PageResponse<ToyParticipationDTO> getUserParticipations(Long userId, int page, int limit) {
+    // Convert page from 1-based to 0-based
+    int pageIndex = Math.max(0, page - 1);
+
+    List<ToyParticipation> participations = giveawayCampaignDomainService
+        .getUserParticipations(userId, pageIndex, limit);
+
+    List<ToyParticipationDTO> participationDTOs = participations.stream()
+        .map(this::mapToToyParticipationDTO)
+        .collect(Collectors.toList());
+
+    long total = giveawayCampaignDomainService.countUserParticipations(userId);
+
+    return new PageResponse<>(participationDTOs, limit, total);
+  }
+
+  @Override
+  public boolean canUserParticipate(Long userId, Long campaignId) {
+    return giveawayCampaignDomainService.canParticipate(userId, campaignId);
+  }
+
+  @Override
+  public boolean hasUserParticipated(Long userId, Long campaignId) {
+    return giveawayCampaignDomainService.hasUserParticipated(userId, campaignId);
+  }
+
+  /**
+   * Chuyển đổi Event entity thành EventDTO.
+   */
+  private EventDTO mapToEventDTO(Event event) {
+    return EventDTO.builder()
+        .id(event.getId())
+        .name(event.getName())
+        .description(event.getDescription())
+        .startDate(event.getStartDate())
+        .endDate(event.getEndDate())
+        .theme(event.getTheme())
+        .rules(event.getRules())
+        .status(event.getStatus())
+        .createdAt(event.getCreatedAt().atZone(ZoneId.systemDefault()).toInstant())
+        .updatedAt(event.getUpdatedAt().atZone(ZoneId.systemDefault()).toInstant())
+        .build();
+  }
+
+  /**
+   * Chuyển đổi ToyParticipation entity thành ToyParticipationDTO.
+   */
+  private ToyParticipationDTO mapToToyParticipationDTO(ToyParticipation participation) {
+    return ToyParticipationDTO.builder()
+        .id(participation.getId())
+        .userId(participation.getUserId())
+        .toyId(participation.getToyId())
+        .campaignId(participation.getCampaignId())
+        .participationDate(participation.getParticipationDate())
+        .status(participation.getStatus())
+        .createdAt(participation.getCreatedAt().atZone(ZoneId.systemDefault()).toInstant())
+        .updatedAt(participation.getUpdatedAt().atZone(ZoneId.systemDefault()).toInstant())
+        .build();
+  }
+}

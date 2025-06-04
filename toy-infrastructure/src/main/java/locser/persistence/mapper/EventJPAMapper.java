@@ -7,9 +7,11 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
 
 import locser.toy.domain.model.entity.Event;
 
+@Repository
 public interface EventJPAMapper extends JpaRepository<Event, Long> {
 
     Optional<Event> findOneById(Long id);

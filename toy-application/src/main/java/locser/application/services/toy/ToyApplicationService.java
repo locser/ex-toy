@@ -1,12 +1,11 @@
 package locser.application.services.toy;
 
 import java.util.List;
-
 import locser.toy.domain.model.dto.CreateToyRequest;
-import locser.toy.domain.model.dto.PageResponse;
 import locser.toy.domain.model.dto.ToyDTO;
 import locser.toy.domain.model.dto.UpdateToyRequest;
 import locser.toy.domain.model.entity.Toy;
+import locser.util.PageResponse;
 
 /**
  * Lớp dịch vụ ứng dụng cho Toy, điều phối các use case.
@@ -86,7 +85,8 @@ public interface ToyApplicationService {
    * @param campaignId ID của chiến dịch (tùy chọn)
    * @return Đối tượng PageResponse chứa danh sách DTO của đồ chơi và thông tin phân trang
    */
-  PageResponse<ToyDTO> getToysWithPagination(int page, int limit, Long userId, Integer status, Long campaignId);
+  PageResponse<ToyDTO> getToysWithPagination(int page, int limit, Long userId, Integer status,
+      Long campaignId);
 
   /**
    * Lấy danh sách đồ chơi có phân trang và sắp xếp.
@@ -100,7 +100,8 @@ public interface ToyApplicationService {
    * @param sortDirection Hướng sắp xếp (asc, desc)
    * @return Đối tượng PageResponse chứa danh sách DTO của đồ chơi và thông tin phân trang
    */
-  PageResponse<ToyDTO> getToysWithPagination(int page, int limit, Long userId, Integer status, Long campaignId, String sortBy, String sortDirection);
+  PageResponse<ToyDTO> getToysWithPagination(int page, int limit, Long userId, Integer status,
+      Long campaignId, String sortBy, String sortDirection);
 
   /**
    * Thêm đồ chơi vào chiến dịch.

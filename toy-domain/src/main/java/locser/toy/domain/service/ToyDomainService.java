@@ -2,7 +2,6 @@ package locser.toy.domain.service;
 
 import locser.toy.domain.exception.ResourceNotFoundException;
 import locser.toy.domain.model.entity.Toy;
-import locser.toy.domain.model.enums.ToyStatus;
 
 /**
  * Interface định nghĩa các dịch vụ miền cho Toy.

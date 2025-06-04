@@ -1,12 +1,11 @@
-package locser.application.services.event;// toy-application/src/main/java/locser/toy/application/service/EventApplicationService.java
+package locser.application.services.event;
 
 import java.util.List;
-
 import locser.toy.domain.model.dto.CreateEventRequest;
 import locser.toy.domain.model.dto.EventDTO;
-import locser.toy.domain.model.dto.PageResponse;
 import locser.toy.domain.model.dto.UpdateEventRequest;
 import locser.toy.domain.model.entity.Event;
+import locser.util.PageResponse;
 
 /**
  * Lớp dịch vụ ứng dụng cho Event, điều phối các use case.
@@ -52,5 +51,6 @@ public interface EventApplicationService {
    * @param sortDirection Hướng sắp xếp (asc, desc)
    * @return Đối tượng PageResponse chứa danh sách sự kiện và thông tin phân trang
    */
-  PageResponse<EventDTO> getEventsWithPagination(int page, int limit, int status, String sortBy, String sortDirection);
+  PageResponse<EventDTO> getEventsWithPagination(int page, int limit, int status, String sortBy,
+      String sortDirection);
 }

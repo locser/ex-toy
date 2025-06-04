@@ -10,14 +10,14 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import jakarta.persistence.Version;
 import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
-@EqualsAndHashCode(callSuper = true)
 @Entity
 @Table(name = "events")
-@Data
+@Getter
+@Setter
 @AllArgsConstructor
 @NoArgsConstructor
 public class Event extends DateAudit {
@@ -46,6 +46,9 @@ public class Event extends DateAudit {
 
   @Column(name = "status", nullable = false, columnDefinition = "INT DEFAULT 0")
   private Integer status;
+
+  @Column(name = "type", nullable = false, columnDefinition = "INT DEFAULT 1")
+  private Integer type = 1; // Default to EXCHANGE
 
   // @Column(name = "created_at", nullable = false, columnDefinition = "DATETIME
   // DEFAULT CURRENT_TIMESTAMP")

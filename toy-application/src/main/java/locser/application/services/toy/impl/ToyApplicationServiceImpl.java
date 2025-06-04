@@ -7,12 +7,12 @@ import org.springframework.stereotype.Service;
 
 import locser.application.services.toy.ToyApplicationService;
 import locser.toy.domain.model.dto.CreateToyRequest;
-import locser.toy.domain.model.dto.PageResponse;
 import locser.toy.domain.model.dto.ToyDTO;
 import locser.toy.domain.model.dto.UpdateToyRequest;
 import locser.toy.domain.model.entity.Toy;
 import locser.toy.domain.repository.ToyRepository;
 import locser.toy.domain.service.ToyDomainService;
+import locser.util.PageResponse;
 
 /**
  * Lớp dịch vụ ứng dụng cho Toy, điều phối các use case.
@@ -161,15 +161,18 @@ public class ToyApplicationServiceImpl implements ToyApplicationService {
   }
 
   @Override
-  public PageResponse<ToyDTO> getToysWithPagination(int page, int limit, Long userId, Integer status, Long campaignId) {
+  public PageResponse<ToyDTO> getToysWithPagination(int page, int limit, Long userId,
+      Integer status, Long campaignId) {
     // Mặc định sắp xếp theo id giảm dần
     return getToysWithPagination(page, limit, userId, status, campaignId, "id", "desc");
   }
 
   @Override
-  public PageResponse<ToyDTO> getToysWithPagination(int page, int limit, Long userId, Integer status, Long campaignId,
+  public PageResponse<ToyDTO> getToysWithPagination(int page, int limit, Long userId,
+      Integer status, Long campaignId,
       String sortBy, String sortDirection) {
-    List<Toy> toys = toyRepository.findWithPagination(page, limit, userId, status, campaignId, sortBy, sortDirection);
+    List<Toy> toys = toyRepository.findWithPagination(page, limit, userId, status, campaignId,
+        sortBy, sortDirection);
 
     List<ToyDTO> toyDTOs = toys.stream()
         .map(this::mapToDTO)
@@ -177,7 +180,7 @@ public class ToyApplicationServiceImpl implements ToyApplicationService {
 
     long total = toyRepository.count(userId, status, campaignId);
 
-    return PageResponse.of(toyDTOs, limit, total);
+    return new PageResponse<ToyDTO>(toyDTOs, limit, total);
   }
 
   @Override

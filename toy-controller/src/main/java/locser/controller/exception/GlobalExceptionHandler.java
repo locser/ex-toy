@@ -2,7 +2,9 @@ package locser.controller.exception;
 
 import java.util.HashMap;
 import java.util.Map;
-
+import locser.controller.response.BaseResponse;
+import locser.toy.domain.exception.BadRequestException;
+import locser.toy.domain.exception.ResourceNotFoundException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
@@ -10,14 +12,11 @@ import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
-
-import locser.controller.response.BaseResponse;
-import locser.toy.domain.exception.BadRequestException;
-import locser.toy.domain.exception.ResourceNotFoundException;
+import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 /**
- * Xử lý ngoại lệ toàn cục cho tất cả các controller.
- * Tất cả các phản hồi đều có cùng một cấu trúc và trả về mã HTTP 200 OK.
+ * Xử lý ngoại lệ toàn cục cho tất cả các controller. Tất cả các phản hồi đều có cùng một cấu trúc
+ * và trả về mã HTTP 200 OK.
  */
 @RestControllerAdvice
 public class GlobalExceptionHandler {
@@ -95,6 +94,15 @@ public class GlobalExceptionHandler {
     System.out.println("Lỗi hệ thống: " + ex);
     return ResponseEntity
         .status(HttpStatus.OK)
-        .body(BaseResponse.error(500, "Lỗi hệ thống: " + ex.getMessage()));
+        .body(BaseResponse.error(400, "Lỗi hệ thống: " + ex.getMessage()));
+  }
+
+  @ExceptionHandler(NoResourceFoundException.class)
+  public ResponseEntity<BaseResponse<Object>> handleNoResourceFoundExceptionExceptions(
+      Exception ex) {
+    System.out.println("Lỗi hệ thống: " + ex);
+    return ResponseEntity
+        .status(HttpStatus.OK)
+        .body(BaseResponse.error(404, "Không tìm thấy API: " + ex.getMessage()));
   }
 }

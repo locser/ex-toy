@@ -2,7 +2,6 @@ package locser.toy.domain.repository;
 
 import java.util.List;
 import java.util.Optional;
-
 import locser.toy.domain.model.entity.Toy;
 
 /**
@@ -104,7 +103,9 @@ public interface ToyRepository {
    * @param sortDirection Sort direction (asc, desc)
    * @return List of toys for the given page
    */
-  List<Toy> findWithPagination(int page, int size, Long userId, Integer status, Long campaignId, String sortBy, String sortDirection);
+  List<Toy> findWithPagination(int page, int size, Long userId, Integer status, Long campaignId,
+      String sortBy,
+      String sortDirection);
 
   /**
    * Count the total number of toys.
@@ -115,4 +116,42 @@ public interface ToyRepository {
    * @return Total number of toys
    */
   long count(Long userId, Integer status, Long campaignId);
+
+  /**
+   * Find toys by campaign ID and status.
+   *
+   * @param campaignId Campaign ID
+   * @param status     Toy status
+   * @return List of toys in the campaign with the given status
+   */
+  List<Toy> findByCampaignIdAndStatus(Long campaignId, Integer status);
+
+  /**
+   * Count toys by campaign ID and status.
+   *
+   * @param campaignId Campaign ID
+   * @param status     Toy status
+   * @return Number of toys in the campaign with the given status
+   */
+  long countByCampaignIdAndStatus(Long campaignId, Integer status);
+
+  /**
+   * Batch update toys status by campaign ID.
+   *
+   * @param campaignId Campaign ID
+   * @param oldStatus  Current status
+   * @param newStatus  New status to set
+   * @return Number of toys updated
+   */
+  int updateStatusByCampaignId(Long campaignId, Integer oldStatus, Integer newStatus);
+
+  /**
+   * Batch update toys to add them to a campaign.
+   *
+   * @param toyIds     List of toy IDs
+   * @param campaignId Campaign ID to assign
+   * @param newStatus  New status to set
+   * @return Number of toys updated
+   */
+  int addToysToCampaign(List<Long> toyIds, Long campaignId, Integer newStatus);
 }

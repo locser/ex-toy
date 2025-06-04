@@ -1,16 +1,17 @@
 package locser.infrastructure.kafka.producer;
 
-import locser.infrastructure.kafka.event.ToyEvent;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import java.time.Instant;
+import java.util.concurrent.CompletableFuture;
+
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Profile;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.kafka.support.SendResult;
 import org.springframework.stereotype.Component;
 
-import java.time.Instant;
-import java.util.concurrent.CompletableFuture;
+import locser.infrastructure.kafka.event.ToyEvent;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * Producer for publishing toy events to Kafka.
@@ -31,7 +32,8 @@ public class ToyEventProducer {
      * Publishes a toy event to Kafka.
      *
      * @param event The toy event to publish
-     * @return A CompletableFuture that will be completed when the send operation completes
+     * @return A CompletableFuture that will be completed when the send operation
+     *         completes
      */
     public CompletableFuture<SendResult<String, Object>> publishToyEvent(ToyEvent event) {
         if (event.getTimestamp() == null) {
@@ -39,13 +41,13 @@ public class ToyEventProducer {
         }
 
         log.info("Publishing toy event: {}", event);
-        
+
         // Use the toy ID as the key for partitioning
         String key = event.getToyId().toString();
-        
+
         // Send the event to Kafka
         CompletableFuture<SendResult<String, Object>> future = kafkaTemplate.send(toyEventsTopic, key, event);
-        
+
         // Add callback for logging
         future.whenComplete((result, ex) -> {
             if (ex == null) {
@@ -54,19 +56,21 @@ public class ToyEventProducer {
                 log.error("Unable to send toy event=[{}] due to : {}", event, ex.getMessage(), ex);
             }
         });
-        
+
         return future;
     }
 
     /**
      * Creates and publishes a toy created event.
      *
-     * @param toyId    ID of the created toy
-     * @param userId   ID of the user who created the toy
-     * @param toyName  Name of the created toy
-     * @return A CompletableFuture that will be completed when the send operation completes
+     * @param toyId   ID of the created toy
+     * @param userId  ID of the user who created the toy
+     * @param toyName Name of the created toy
+     * @return A CompletableFuture that will be completed when the send operation
+     *         completes
      */
-    public CompletableFuture<SendResult<String, Object>> publishToyCreatedEvent(Long toyId, Long userId, String toyName) {
+    public CompletableFuture<SendResult<String, Object>> publishToyCreatedEvent(Long toyId, Long userId,
+            String toyName) {
         ToyEvent event = ToyEvent.builder()
                 .eventType(ToyEvent.ToyEventType.CREATED)
                 .toyId(toyId)
@@ -74,20 +78,22 @@ public class ToyEventProducer {
                 .toyName(toyName)
                 .timestamp(Instant.now())
                 .build();
-        
+
         return publishToyEvent(event);
     }
 
     /**
      * Creates and publishes a toy status changed event.
      *
-     * @param toyId    ID of the toy
-     * @param userId   ID of the user who owns the toy
-     * @param toyName  Name of the toy
-     * @param status   New status of the toy
-     * @return A CompletableFuture that will be completed when the send operation completes
+     * @param toyId   ID of the toy
+     * @param userId  ID of the user who owns the toy
+     * @param toyName Name of the toy
+     * @param status  New status of the toy
+     * @return A CompletableFuture that will be completed when the send operation
+     *         completes
      */
-    public CompletableFuture<SendResult<String, Object>> publishToyStatusChangedEvent(Long toyId, Long userId, String toyName, Integer status) {
+    public CompletableFuture<SendResult<String, Object>> publishToyStatusChangedEvent(Long toyId, Long userId,
+            String toyName, Integer status) {
         ToyEvent event = ToyEvent.builder()
                 .eventType(ToyEvent.ToyEventType.STATUS_CHANGED)
                 .toyId(toyId)
@@ -96,7 +102,7 @@ public class ToyEventProducer {
                 .status(status)
                 .timestamp(Instant.now())
                 .build();
-        
+
         return publishToyEvent(event);
     }
 }

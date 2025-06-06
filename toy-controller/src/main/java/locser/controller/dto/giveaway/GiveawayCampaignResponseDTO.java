@@ -29,12 +29,6 @@ public class GiveawayCampaignResponseDTO {
     private String rules;
     private Integer status;
 
-    @JsonProperty("total_toys")
-    private Long totalToys;
-
-    @JsonProperty("available_toys")
-    private Long availableToys;
-
     @JsonProperty("claimed_toys")
     private Long claimedToys;
 
@@ -52,6 +46,12 @@ public class GiveawayCampaignResponseDTO {
 
     @JsonProperty("is_expired")
     private Boolean isExpired;
+
+    @JsonProperty("total_toys")
+    private Integer totalToys;
+
+    @JsonProperty("available_toys")
+    private Integer availableToys;
 
     @JsonProperty("created_at")
     private String createdAt;

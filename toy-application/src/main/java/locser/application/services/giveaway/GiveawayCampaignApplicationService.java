@@ -91,7 +91,7 @@ public interface GiveawayCampaignApplicationService {
    * @param campaignId ID của campaign
    * @return true nếu có thể tham gia, false nếu không
    */
-  boolean canUserParticipate(Long userId, Long campaignId);
+  int canUserParticipate(Long userId, Long campaignId);
 
   /**
    * Kiểm tra user đã tham gia campaign chưa.

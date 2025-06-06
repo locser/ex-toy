@@ -2,15 +2,17 @@ package locser.persistence.repository;
 
 import java.util.List;
 import java.util.Optional;
-import locser.persistence.mapper.EventJPAMapper;
-import locser.toy.domain.model.entity.Event;
-import locser.toy.domain.model.enums.EventStatus;
-import locser.toy.domain.repository.EventRepository;
+
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Direction;
 import org.springframework.stereotype.Service;
+
+import locser.persistence.mapper.EventJPAMapper;
+import locser.toy.domain.model.entity.Event;
+import locser.toy.domain.model.enums.EventStatus;
+import locser.toy.domain.repository.EventRepository;
 
 @Service
 public class EventInfrasRepositoryImpl implements EventRepository {
@@ -97,7 +99,8 @@ public class EventInfrasRepositoryImpl implements EventRepository {
 
   @Override
   public Optional<Event> findByIdAndType(Long id, Integer type) {
-    return Optional.empty();
+    System.out.println("id: " + id + " type: " + type);
+    return eventJPAMapper.findByIdAndType(id, type);
   }
 
   @Override

@@ -16,6 +16,8 @@ public interface EventJPAMapper extends JpaRepository<Event, Long> {
 
     Optional<Event> findOneById(Long id);
 
+    Optional<Event> findByIdAndType(Long id, Integer type);
+
     List<Event> findByStatus(int status);
 
     List<Event> findByStatus(int status, Sort sort);

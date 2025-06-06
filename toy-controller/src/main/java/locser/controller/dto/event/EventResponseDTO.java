@@ -24,6 +24,8 @@ public class EventResponseDTO {
     private String theme;
     private String rules;
     private Integer status;
+    private Integer totalToys;
+    private Integer availableToys;
     private Instant createdAt;
     private Instant updatedAt;
 }

@@ -13,13 +13,13 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class GiveawayCampaignStatsDTO {
-    private Long campaignId;
-    private String campaignName;
+    private Long id;
+    private String name;
     private Long totalToys;
     private Long availableToys;
     private Long claimedToys;
     private Long totalParticipants;
     private Double participationRate;
-    private Boolean isActive;
-    private Boolean isExpired;
+    private int isActive;
+    private int isExpired;
 }

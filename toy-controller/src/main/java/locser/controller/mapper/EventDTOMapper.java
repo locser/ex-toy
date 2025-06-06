@@ -90,6 +90,8 @@ public class EventDTOMapper {
         .theme(dto.getTheme())
         .rules(dto.getRules())
         .status(dto.getStatus())
+        .totalToys(dto.getTotalToys())
+        .availableToys(dto.getAvailableToys())
         .createdAt(dto.getCreatedAt())
         .updatedAt(dto.getUpdatedAt())
         .build();

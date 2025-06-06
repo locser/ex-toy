@@ -1,5 +1,15 @@
 package locser.controller.http;
 
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
 import jakarta.validation.Valid;
 import locser.application.services.giveaway.GiveawayCampaignApplicationService;
 import locser.controller.dto.giveaway.AddToysToGiveawayCampaignRequestDTO;
@@ -9,6 +19,7 @@ import locser.controller.dto.giveaway.GiveawayCampaignStatsResponseDTO;
 import locser.controller.dto.giveaway.ToyParticipationResponseDTO;
 import locser.controller.mapper.GiveawayCampaignDTOMapper;
 import locser.controller.response.BaseResponse;
+import locser.toy.domain.model.dto.CreateGiveawayCampaignRequest;
 import locser.toy.domain.model.dto.EventDTO;
 import locser.toy.domain.model.dto.GiveawayCampaignStatsDTO;
 import locser.toy.domain.model.dto.ToyParticipationDTO;
@@ -16,16 +27,6 @@ import locser.toy.domain.validation.annotation.ValidId;
 import locser.util.PageResponse;
 import locser.util.PageResponseDTO;
 import locser.utils.AppConstants;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestHeader;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
 
 /**
  * Controller xử lý các API liên quan đến Giveaway Campaign.
@@ -52,8 +53,9 @@ public class GiveawayCampaignController {
 
     System.out.println(requestDTO);
 
-    EventDTO campaign = giveawayCampaignService.createGiveawayCampaign(
-        GiveawayCampaignDTOMapper.toCreateGiveawayCampaignRequest(requestDTO));
+    CreateGiveawayCampaignRequest dto = GiveawayCampaignDTOMapper.toCreateGiveawayCampaignRequest(requestDTO);
+
+    EventDTO campaign = giveawayCampaignService.createGiveawayCampaign(dto);
 
     return BaseResponse.success(
         GiveawayCampaignDTOMapper.toGiveawayCampaignResponseDTO(campaign),
@@ -130,7 +132,7 @@ public class GiveawayCampaignController {
    * @param requestDTO Thông tin cập nhật
    * @return Campaign đã được cập nhật
    */
-  @PutMapping("/admin/giveaway-campaigns/{id}")
+  @PostMapping("/admin/giveaway-campaigns/{id}/update")
   public BaseResponse<GiveawayCampaignResponseDTO> updateGiveawayCampaign(
       @PathVariable @ValidId Long id,
       @Valid @RequestBody CreateGiveawayCampaignRequestDTO requestDTO) {

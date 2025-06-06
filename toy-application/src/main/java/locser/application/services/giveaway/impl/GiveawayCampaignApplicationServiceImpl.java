@@ -44,10 +44,13 @@ public class GiveawayCampaignApplicationServiceImpl implements GiveawayCampaignA
     campaign.setStartDate(request.getStartDate());
     campaign.setEndDate(request.getEndDate());
     campaign.setTheme(request.getTheme());
-    campaign.setRules(request.getRules());
+    campaign.setRules(new String(request.getRules()));
+    campaign.setTotalToys(request.getTotalToys());
+    campaign.setAvailableToys(0);
 
     // Gọi domain service để xử lý logic nghiệp vụ
     campaign = giveawayCampaignDomainService.initializeNewGiveawayCampaign(campaign);
+    System.out.println(campaign);
 
     // Lưu vào repository
     Event savedCampaign = eventRepository.save(campaign);
@@ -116,18 +119,20 @@ public class GiveawayCampaignApplicationServiceImpl implements GiveawayCampaignA
 
   @Override
   public GiveawayCampaignStatsDTO getGiveawayCampaignStats(Long campaignId) {
+    System.out.println("campaignId: " + campaignId);
     Event campaign = giveawayCampaignDomainService.getGiveawayCampaignById(campaignId);
 
     long totalToys = giveawayCampaignDomainService.countTotalToysInCampaign(campaignId);
-    long availableToys = giveawayCampaignDomainService.countAvailableToysInCampaign(campaignId);
+    long availableToys = campaign.getAvailableToys();
+    // giveawayCampaignDomainService.countAvailableToysInCampaign(campaignId);
     long claimedToys = totalToys - availableToys;
     long totalParticipants = giveawayCampaignDomainService.countCampaignParticipations(campaignId);
 
     double participationRate = totalToys > 0 ? (double) claimedToys / totalToys * 100 : 0.0;
 
     return GiveawayCampaignStatsDTO.builder()
-        .campaignId(campaignId)
-        .campaignName(campaign.getName())
+        .id(campaignId)
+        .name(campaign.getName())
         .totalToys(totalToys)
         .availableToys(availableToys)
         .claimedToys(claimedToys)
@@ -156,7 +161,7 @@ public class GiveawayCampaignApplicationServiceImpl implements GiveawayCampaignA
   }
 
   @Override
-  public boolean canUserParticipate(Long userId, Long campaignId) {
+  public int canUserParticipate(Long userId, Long campaignId) {
     return giveawayCampaignDomainService.canParticipate(userId, campaignId);
   }
 

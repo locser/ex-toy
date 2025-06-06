@@ -56,6 +56,8 @@ public class GiveawayCampaignDomainServiceImpl implements GiveawayCampaignDomain
         // Kiểm tra ID phải lớn hơn 0
         IdValidator.validateId(id, "Campaign");
 
+        System.out.println("id: " + id + " type: " + EventType.GIVEAWAY.getValue());
+
         Event campaign = eventRepository.findByIdAndType(id, EventType.GIVEAWAY.getValue())
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy chiến dịch phát quà với ID: " + id));
 
@@ -91,9 +93,9 @@ public class GiveawayCampaignDomainServiceImpl implements GiveawayCampaignDomain
         eventRepository.save(campaign);
 
         // Cập nhật trạng thái toys về AVAILABLE
-        toyRepository.updateStatusByCampaignId(id, 
-            ToyStatus.GIVEAWAY_AVAILABLE.getValue(), 
-            ToyStatus.AVAILABLE.getValue());
+        toyRepository.updateStatusByCampaignId(id,
+                ToyStatus.GIVEAWAY_AVAILABLE.getValue(),
+                ToyStatus.AVAILABLE.getValue());
     }
 
     @Override
@@ -109,19 +111,27 @@ public class GiveawayCampaignDomainServiceImpl implements GiveawayCampaignDomain
 
         // Validate campaign status
         if (campaign.getStatus().equals(EventStatus.FINISHED.getValue()) ||
-            campaign.getStatus().equals(EventStatus.DELETED.getValue())) {
+                campaign.getStatus().equals(EventStatus.DELETED.getValue())) {
             throw new BadRequestException("Không thể thêm toys vào chiến dịch đã kết thúc hoặc đã xóa");
         }
 
         // Validate all toys exist and are available
+        int availableToys = 0;
+
         for (Long toyId : toyIds) {
             IdValidator.validateId(toyId, "Toy");
             Toy toy = toyRepository.findOneById(toyId)
-                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy đồ chơi với ID: " + toyId));
-            
+                    .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy đồ chơi với ID: " + toyId));
+
             if (!toy.getStatus().equals(ToyStatus.AVAILABLE.getValue())) {
                 throw new BadRequestException("Đồ chơi ID " + toyId + " không khả dụng để thêm vào chiến dịch");
             }
+            availableToys++;
+        }
+
+        if (availableToys > 0) {
+            campaign.setAvailableToys(availableToys);
+            eventRepository.save(campaign);
         }
 
         // Batch update toys
@@ -135,9 +145,13 @@ public class GiveawayCampaignDomainServiceImpl implements GiveawayCampaignDomain
     }
 
     @Override
+
     public long countAvailableToysInCampaign(Long campaignId) {
-        IdValidator.validateId(campaignId, "Campaign");
-        return toyRepository.countByCampaignIdAndStatus(campaignId, ToyStatus.GIVEAWAY_AVAILABLE.getValue());
+        // IdValidator.validateId(campaignId, "Campaign");
+        // return toyRepository.countByCampaignIdAndStatus(campaignId,
+        // ToyStatus.GIVEAWAY_AVAILABLE.getValue());
+
+        return 0;
     }
 
     @Override
@@ -149,23 +163,23 @@ public class GiveawayCampaignDomainServiceImpl implements GiveawayCampaignDomain
     }
 
     @Override
-    public boolean canParticipate(Long userId, Long campaignId) {
+    public int canParticipate(Long userId, Long campaignId) {
         IdValidator.validateId(userId, "User");
         IdValidator.validateId(campaignId, "Campaign");
 
         // Check if user already participated
         if (hasUserParticipated(userId, campaignId)) {
-            return false;
+            return 0;
         }
 
         // Check if campaign is active
         Event campaign = getGiveawayCampaignById(campaignId);
-        if (!isCampaignActive(campaign)) {
-            return false;
+        if (isCampaignActive(campaign) == 0) {
+            return 0;
         }
 
         // Check if there are available toys
-        return countAvailableToysInCampaign(campaignId) > 0;
+        return campaign.getAvailableToys() > 0 ? 1 : 0;
     }
 
     @Override
@@ -202,36 +216,44 @@ public class GiveawayCampaignDomainServiceImpl implements GiveawayCampaignDomain
     @Override
     public void updateCampaignStatus(Long campaignId, Integer status) {
         IdValidator.validateId(campaignId, "Campaign");
-        
+
         Event campaign = getGiveawayCampaignById(campaignId);
         campaign.setStatus(status);
         eventRepository.save(campaign);
     }
 
     @Override
-    public boolean isCampaignActive(Event campaign) {
+    public int isCampaignActive(Event campaign) {
         if (campaign == null) {
-            return false;
+            return 0;
         }
 
         // Check status
         if (!campaign.getStatus().equals(EventStatus.ONGOING.getValue())) {
-            return false;
+            return 0;
         }
 
         // Check dates
         LocalDateTime now = LocalDateTime.now();
-        return !now.isBefore(campaign.getStartDate()) && !now.isAfter(campaign.getEndDate());
+        if (!now.isBefore(campaign.getStartDate()) && !now.isAfter(campaign.getEndDate())) {
+            return 1;
+        }
+
+        return 0;
     }
 
     @Override
-    public boolean isCampaignExpired(Event campaign) {
+    public int isCampaignExpired(Event campaign) {
         if (campaign == null) {
-            return true;
+            return 0;
         }
 
         LocalDateTime now = LocalDateTime.now();
-        return now.isAfter(campaign.getEndDate());
+        if (now.isAfter(campaign.getEndDate())) {
+            return 1;
+        }
+
+        return 0;
     }
 
     /**

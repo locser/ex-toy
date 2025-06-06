@@ -29,6 +29,8 @@ public class EventDTO {
   private Integer type;
   private long total;
   private Integer status;
+  private Integer totalToys;
+  private Integer availableToys;
   private Instant createdAt;
   private Instant updatedAt;
 }

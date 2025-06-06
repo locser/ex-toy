@@ -2,9 +2,7 @@ package locser.controller.exception;
 
 import java.util.HashMap;
 import java.util.Map;
-import locser.controller.response.BaseResponse;
-import locser.toy.domain.exception.BadRequestException;
-import locser.toy.domain.exception.ResourceNotFoundException;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
@@ -14,8 +12,13 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
 
+import locser.controller.response.BaseResponse;
+import locser.toy.domain.exception.BadRequestException;
+import locser.toy.domain.exception.ResourceNotFoundException;
+
 /**
- * Xử lý ngoại lệ toàn cục cho tất cả các controller. Tất cả các phản hồi đều có cùng một cấu trúc
+ * Xử lý ngoại lệ toàn cục cho tất cả các controller. Tất cả các phản hồi đều có
+ * cùng một cấu trúc
  * và trả về mã HTTP 200 OK.
  */
 @RestControllerAdvice
@@ -64,9 +67,22 @@ public class GlobalExceptionHandler {
       errors.put(fieldName, errorMessage);
     });
 
+    // "message": "Lỗi validation: {totalToys=Tổng số toy không được để trống}"
+
+    // tôi muốn nó trả về là
+    // {
+    // "status": 400,
+    // "message": "Tổng số toy không được để trống",
+    // "data": null
+    // }
+
+    // Lấy message đầu tiên từ errors (nếu có), nếu không thì trả về message mặc
+    // định
+    String firstErrorMessage = errors.values().stream().findFirst().orElse("Lỗi validation");
+
     return ResponseEntity
         .status(HttpStatus.OK)
-        .body(BaseResponse.error(400, "Lỗi validation", errors));
+        .body(BaseResponse.error(400, firstErrorMessage, null));
   }
 
   /**

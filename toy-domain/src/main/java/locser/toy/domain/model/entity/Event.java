@@ -29,7 +29,7 @@ public class Event extends DateAudit {
   @Column(name = "name", nullable = false)
   private String name;
 
-  @Column(name = "description", nullable = false, columnDefinition = "TEXT")
+  @Column(name = "description", nullable = false, columnDefinition = "TEXT", length = 10000)
   private String description = "";
 
   @Column(name = "start_date", nullable = false, columnDefinition = "DATETIME DEFAULT CURRENT_TIMESTAMP")
@@ -41,7 +41,7 @@ public class Event extends DateAudit {
   @Column(name = "theme", nullable = false, columnDefinition = "VARCHAR(255) DEFAULT ''")
   private String theme;
 
-  @Column(name = "rules", nullable = false, columnDefinition = "JSON")
+  @Column(name = "rules", nullable = false, columnDefinition = "TEXT", length = 1000)
   private String rules;
 
   @Column(name = "status", nullable = false, columnDefinition = "INT DEFAULT 0")
@@ -58,6 +58,12 @@ public class Event extends DateAudit {
   // @Column(name = "updated_at", nullable = false, columnDefinition = "DATETIME
   // DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP")
   // private LocalDateTime updatedAt;
+
+  @Column(name = "total_toys", nullable = false, columnDefinition = "INT DEFAULT 0")
+  private Integer totalToys = 0;
+
+  @Column(name = "available_toys", nullable = false, columnDefinition = "INT DEFAULT 0")
+  private Integer availableToys = 0;
 
   @Version
   private Long version = 0L;

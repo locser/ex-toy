@@ -37,8 +37,8 @@ public class GiveawayCampaignStatsResponseDTO {
     private Double participationRate;
 
     @JsonProperty("is_active")
-    private Boolean isActive;
+    private int isActive;
 
     @JsonProperty("is_expired")
-    private Boolean isExpired;
+    private int isExpired;
 }

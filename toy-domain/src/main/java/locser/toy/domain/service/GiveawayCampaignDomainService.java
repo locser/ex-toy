@@ -25,7 +25,8 @@ public interface GiveawayCampaignDomainService {
      *
      * @param id ID của campaign
      * @return Campaign
-     * @throws ResourceNotFoundException nếu không tìm thấy hoặc không phải giveaway campaign
+     * @throws ResourceNotFoundException nếu không tìm thấy hoặc không phải giveaway
+     *                                   campaign
      */
     Event getGiveawayCampaignById(Long id);
 
@@ -48,7 +49,7 @@ public interface GiveawayCampaignDomainService {
      * Thêm toys vào giveaway campaign.
      *
      * @param campaignId ID của campaign
-     * @param toyIds Danh sách ID của toys cần thêm
+     * @param toyIds     Danh sách ID của toys cần thêm
      * @return Số lượng toys đã được thêm thành công
      */
     int addToysToGiveawayCampaign(Long campaignId, List<Long> toyIds);
@@ -80,16 +81,16 @@ public interface GiveawayCampaignDomainService {
     /**
      * Kiểm tra user có thể tham gia campaign không.
      *
-     * @param userId ID của user
+     * @param userId     ID của user
      * @param campaignId ID của campaign
      * @return true nếu có thể tham gia, false nếu không
      */
-    boolean canParticipate(Long userId, Long campaignId);
+    int canParticipate(Long userId, Long campaignId);
 
     /**
      * Kiểm tra user đã tham gia campaign chưa.
      *
-     * @param userId ID của user
+     * @param userId     ID của user
      * @param campaignId ID của campaign
      * @return true nếu đã tham gia, false nếu chưa
      */
@@ -99,8 +100,8 @@ public interface GiveawayCampaignDomainService {
      * Lấy danh sách participations của user.
      *
      * @param userId ID của user
-     * @param page Số trang (bắt đầu từ 0)
-     * @param limit Số lượng items per page
+     * @param page   Số trang (bắt đầu từ 0)
+     * @param limit  Số lượng items per page
      * @return Danh sách participations
      */
     List<ToyParticipation> getUserParticipations(Long userId, int page, int limit);
@@ -133,7 +134,7 @@ public interface GiveawayCampaignDomainService {
      * Cập nhật trạng thái campaign.
      *
      * @param campaignId ID của campaign
-     * @param status Trạng thái mới
+     * @param status     Trạng thái mới
      */
     void updateCampaignStatus(Long campaignId, Integer status);
 
@@ -143,7 +144,7 @@ public interface GiveawayCampaignDomainService {
      * @param campaign Campaign cần kiểm tra
      * @return true nếu active, false nếu không
      */
-    boolean isCampaignActive(Event campaign);
+    int isCampaignActive(Event campaign);
 
     /**
      * Kiểm tra campaign có hết hạn không.
@@ -151,5 +152,5 @@ public interface GiveawayCampaignDomainService {
      * @param campaign Campaign cần kiểm tra
      * @return true nếu hết hạn, false nếu chưa
      */
-    boolean isCampaignExpired(Event campaign);
+    int isCampaignExpired(Event campaign);
 }

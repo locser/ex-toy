@@ -85,6 +85,8 @@ public class GiveawayCampaignDTOMapper {
                 .theme(dto.getTheme())
                 .rules(dto.getRules())
                 .status(dto.getStatus())
+                .totalToys(dto.getTotalToys())
+                .availableToys(dto.getAvailableToys())
                 .createdAt(formatInstant(dto.getCreatedAt()))
                 .updatedAt(formatInstant(dto.getUpdatedAt()))
                 .build();
@@ -109,8 +111,8 @@ public class GiveawayCampaignDTOMapper {
 
         GiveawayCampaignResponseDTO response = toGiveawayCampaignResponseDTO(dto);
         if (response != null) {
-            response.setTotalToys(totalToys);
-            response.setAvailableToys(availableToys);
+            response.setTotalToys(totalToys.intValue());
+            response.setAvailableToys(availableToys.intValue());
             response.setClaimedToys(totalToys - availableToys);
             response.setTotalParticipants(totalParticipants);
             response.setCanParticipate(canParticipate);

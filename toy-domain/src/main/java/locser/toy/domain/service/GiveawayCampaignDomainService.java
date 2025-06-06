@@ -94,7 +94,7 @@ public interface GiveawayCampaignDomainService {
      * @param campaignId ID của campaign
      * @return true nếu đã tham gia, false nếu chưa
      */
-    boolean hasUserParticipated(Long userId, Long campaignId);
+    int hasUserParticipated(Long userId, Long campaignId);
 
     /**
      * Lấy danh sách participations của user.

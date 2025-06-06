@@ -15,11 +15,11 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class GiveawayCampaignStatsResponseDTO {
-    @JsonProperty("campaign_id")
-    private Long campaignId;
+    @JsonProperty("id")
+    private Long id;
 
-    @JsonProperty("campaign_name")
-    private String campaignName;
+    @JsonProperty("name")
+    private String name;
 
     @JsonProperty("total_toys")
     private Long totalToys;

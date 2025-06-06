@@ -168,7 +168,7 @@ public class GiveawayCampaignDomainServiceImpl implements GiveawayCampaignDomain
         IdValidator.validateId(campaignId, "Campaign");
 
         // Check if user already participated
-        if (hasUserParticipated(userId, campaignId)) {
+        if (hasUserParticipated(userId, campaignId) == 1) {
             return 0;
         }
 
@@ -183,10 +183,10 @@ public class GiveawayCampaignDomainServiceImpl implements GiveawayCampaignDomain
     }
 
     @Override
-    public boolean hasUserParticipated(Long userId, Long campaignId) {
+    public int hasUserParticipated(Long userId, Long campaignId) {
         IdValidator.validateId(userId, "User");
         IdValidator.validateId(campaignId, "Campaign");
-        return toyParticipationRepository.existsByUserIdAndCampaignId(userId, campaignId);
+        return toyParticipationRepository.existsByUserIdAndCampaignId(userId, campaignId) ? 1 : 0;
     }
 
     @Override

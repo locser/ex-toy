@@ -36,16 +36,16 @@ public class GiveawayCampaignResponseDTO {
     private Long totalParticipants;
 
     @JsonProperty("can_participate")
-    private Boolean canParticipate;
+    private int canParticipate;
 
     @JsonProperty("user_participated")
-    private Boolean userParticipated;
+    private int userParticipated;
 
     @JsonProperty("is_active")
-    private Boolean isActive;
+    private int isActive;
 
     @JsonProperty("is_expired")
-    private Boolean isExpired;
+    private int isExpired;
 
     @JsonProperty("total_toys")
     private Integer totalToys;

@@ -110,8 +110,8 @@ public class GiveawayCampaignController {
     EventDTO campaign = giveawayCampaignService.getGiveawayCampaignById(id);
     GiveawayCampaignStatsDTO stats = giveawayCampaignService.getGiveawayCampaignStats(id);
 
-    Boolean canParticipate = false;
-    Boolean userParticipated = false;
+    int canParticipate = 0;
+    int userParticipated = 0;
 
     if (userId != null) {
       canParticipate = giveawayCampaignService.canUserParticipate(userId, id);

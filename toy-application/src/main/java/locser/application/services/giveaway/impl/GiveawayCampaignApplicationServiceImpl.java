@@ -166,7 +166,7 @@ public class GiveawayCampaignApplicationServiceImpl implements GiveawayCampaignA
   }
 
   @Override
-  public boolean hasUserParticipated(Long userId, Long campaignId) {
+  public int hasUserParticipated(Long userId, Long campaignId) {
     return giveawayCampaignDomainService.hasUserParticipated(userId, campaignId);
   }
 

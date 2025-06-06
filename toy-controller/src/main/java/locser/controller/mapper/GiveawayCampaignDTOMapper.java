@@ -107,7 +107,7 @@ public class GiveawayCampaignDTOMapper {
      */
     public static GiveawayCampaignResponseDTO toGiveawayCampaignResponseDTO(
             EventDTO dto, Long totalToys, Long availableToys, Long totalParticipants,
-            Boolean canParticipate, Boolean userParticipated, Boolean isActive, Boolean isExpired) {
+            int canParticipate, int userParticipated, int isActive, int isExpired) {
 
         GiveawayCampaignResponseDTO response = toGiveawayCampaignResponseDTO(dto);
         if (response != null) {
@@ -135,8 +135,8 @@ public class GiveawayCampaignDTOMapper {
         }
 
         return GiveawayCampaignStatsResponseDTO.builder()
-                .campaignId(dto.getCampaignId())
-                .campaignName(dto.getCampaignName())
+                .id(dto.getId())
+                .name(dto.getName())
                 .totalToys(dto.getTotalToys())
                 .availableToys(dto.getAvailableToys())
                 .claimedToys(dto.getClaimedToys())

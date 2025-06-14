@@ -2,6 +2,10 @@ package locser.toy.domain.repository;
 
 import java.util.List;
 import java.util.Optional;
+
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
+
 import locser.toy.domain.model.entity.Toy;
 
 /**
@@ -153,5 +157,38 @@ public interface ToyRepository {
    * @param newStatus  New status to set
    * @return Number of toys updated
    */
-  int addToysToCampaign(List<Long> toyIds, Long campaignId, Integer newStatus);
+  // int addToysToCampaign(List<Long> toyIds, Long campaignId, Integer newStatus);
+
+  /**
+   * Find toys by list of IDs.
+   *
+   * @param ids List of toy IDs
+   * @return List of toys with the given IDs
+   */
+  List<Toy> findByIdIn(List<Long> ids);
+
+  /**
+   * Find toys by list of IDs and status.
+   *
+   * @param ids    List of toy IDs
+   * @param status Toy status
+   * @return List of toys with the given IDs and status
+   */
+  List<Toy> findByIdInAndStatus(List<Long> ids, int status);
+
+  int addToysToCampaign(List<Long> toyIds, Long campaignId);
+
+  List<Toy> findAll(Specification<Toy> specification);
+
+  List<Toy> findAll(Specification<Toy> specification, Pageable pageable);
+
+  /**
+   * Get a random available toy from a campaign.
+   * This uses SQL RAND() function for efficient random selection.
+   *
+   * @param campaignId The campaign ID
+   * @return A random available toy, or null if none available
+   */
+  Toy findRandomAvailableToyInCampaign(Long campaignId);
+
 }

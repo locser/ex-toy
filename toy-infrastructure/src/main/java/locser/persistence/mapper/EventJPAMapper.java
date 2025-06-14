@@ -7,6 +7,9 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import locser.toy.domain.model.entity.Event;
@@ -38,4 +41,16 @@ public interface EventJPAMapper extends JpaRepository<Event, Long> {
      * @return Số lượng sự kiện
      */
     long countByStatus(int status);
+
+    /**
+     * Decrement the available toys count for a campaign.
+     * This is an atomic operation that will only succeed if there are toys
+     * available.
+     *
+     * @param campaignId The campaign ID
+     * @return Number of rows updated (1 if successful, 0 if no toys available)
+     */
+    @Modifying
+    @Query("UPDATE Event e SET e.availableToys = e.availableToys - 1 WHERE e.id = :campaignId AND e.availableToys > 0")
+    int decrementAvailableToys(@Param("campaignId") Long campaignId);
 }

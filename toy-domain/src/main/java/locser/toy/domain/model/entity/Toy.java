@@ -9,7 +9,6 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
-import jakarta.persistence.Version;
 import locser.toy.domain.model.enums.ToyConditionStatus;
 import locser.toy.domain.model.enums.ToyStatus;
 import lombok.AllArgsConstructor;
@@ -61,9 +60,6 @@ public class Toy {
 
     @Column(name = "updated_at", nullable = false, columnDefinition = "DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP")
     private LocalDateTime updatedAt = LocalDateTime.now();
-
-    @Version
-    private Long version = 0L;
 
     /**
      * Updates the updatedAt timestamp before updating the entity.

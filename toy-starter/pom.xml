@@ -48,6 +48,18 @@
       <groupId>org.springframework.boot</groupId>
     </dependency>
 
+    <!-- Redis -->
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-data-redis</artifactId>
+    </dependency>
+
+    <!-- Jackson JSR310 for Java 8 date/time support -->
+    <dependency>
+      <groupId>com.fasterxml.jackson.datatype</groupId>
+      <artifactId>jackson-datatype-jsr310</artifactId>
+    </dependency>
+
     <!-- Springdoc OpenAPI UI
     <dependency>
         <groupId>org.springdoc</groupId>

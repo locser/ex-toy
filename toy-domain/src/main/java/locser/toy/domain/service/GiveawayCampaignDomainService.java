@@ -2,6 +2,9 @@ package locser.toy.domain.service;
 
 import java.util.List;
 
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
+
 import locser.toy.domain.exception.ResourceNotFoundException;
 import locser.toy.domain.model.entity.Event;
 import locser.toy.domain.model.entity.Toy;
@@ -153,4 +156,67 @@ public interface GiveawayCampaignDomainService {
      * @return true nếu hết hạn, false nếu chưa
      */
     int isCampaignExpired(Event campaign);
+
+    /**
+     * User tham gia giveaway campaign - Level 1 (Basic).
+     * Thực hiện atomic transaction để claim toy.
+     *
+     * @param userId     ID của user
+     * @param campaignId ID của campaign
+     * @return ToyParticipation đã được tạo
+     */
+    ToyParticipation participateInGiveaway(Long userId, Long campaignId);
+
+    /**
+     * User tham gia giveaway campaign - Level 2 (Optimized).
+     * Sử dụng cache và optimistic locking.
+     *
+     * @param userId     ID của user
+     * @param campaignId ID của campaign
+     * @return ToyParticipation đã được tạo
+     */
+    ToyParticipation participateInGiveawayOptimized(Long userId, Long campaignId);
+
+    /**
+     * User tham gia giveaway campaign - Level 3 (Advanced).
+     * Sử dụng distributed locking và smart toy selection.
+     *
+     * @param userId      ID của user
+     * @param campaignId  ID của campaign
+     * @param preferences Preferences của user (optional)
+     * @return ToyParticipation đã được tạo
+     */
+    ToyParticipation participateInGiveawayAdvanced(Long userId, Long campaignId,
+            String preferences);
+
+    /**
+     * Chọn toy ngẫu nhiên từ danh sách available toys.
+     *
+     * @param campaignId ID của campaign
+     * @return Toy được chọn
+     */
+    Toy selectRandomToy(Long campaignId);
+
+    /**
+     * Chọn toy thông minh dựa trên preferences và fairness algorithm.
+     *
+     * @param campaignId  ID của campaign
+     * @param userId      ID của user
+     * @param preferences Preferences của user
+     * @return Toy được chọn
+     */
+    Toy selectToyWithPreferences(Long campaignId, Long userId, String preferences);
+
+    /**
+     * Validate điều kiện tham gia campaign.
+     *
+     * @param userId     ID của user
+     * @param campaignId ID của campaign
+     * @param campaign   Campaign entity
+     */
+    void validateParticipationEligibility(Long userId, Long campaignId, Event campaign);
+
+    List<Toy> getToysInCampaign(Specification<Toy> specification);
+
+    List<Toy> getToysInCampaign(Specification<Toy> specification, Pageable pageable);
 }

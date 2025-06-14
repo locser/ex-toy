@@ -4,7 +4,11 @@ import java.time.ZoneId;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import locser.application.services.giveaway.GiveawayCampaignApplicationService;
 import locser.toy.domain.model.dto.AddToysToGiveawayCampaignRequest;
@@ -13,10 +17,12 @@ import locser.toy.domain.model.dto.EventDTO;
 import locser.toy.domain.model.dto.GiveawayCampaignStatsDTO;
 import locser.toy.domain.model.dto.ToyParticipationDTO;
 import locser.toy.domain.model.entity.Event;
+import locser.toy.domain.model.entity.Toy;
 import locser.toy.domain.model.entity.ToyParticipation;
 import locser.toy.domain.model.enums.EventType;
 import locser.toy.domain.repository.EventRepository;
 import locser.toy.domain.service.GiveawayCampaignDomainService;
+import locser.toy.domain.specifications.ToySpecification;
 import locser.util.PageResponse;
 
 /**
@@ -27,12 +33,15 @@ public class GiveawayCampaignApplicationServiceImpl implements GiveawayCampaignA
 
   private final GiveawayCampaignDomainService giveawayCampaignDomainService;
   private final EventRepository eventRepository;
+  private final ToySpecification toySpecification;
 
   public GiveawayCampaignApplicationServiceImpl(
       GiveawayCampaignDomainService giveawayCampaignDomainService,
-      EventRepository eventRepository) {
+      EventRepository eventRepository,
+      ToySpecification toySpecification) {
     this.giveawayCampaignDomainService = giveawayCampaignDomainService;
     this.eventRepository = eventRepository;
+    this.toySpecification = toySpecification;
   }
 
   @Override
@@ -119,7 +128,6 @@ public class GiveawayCampaignApplicationServiceImpl implements GiveawayCampaignA
 
   @Override
   public GiveawayCampaignStatsDTO getGiveawayCampaignStats(Long campaignId) {
-    System.out.println("campaignId: " + campaignId);
     Event campaign = giveawayCampaignDomainService.getGiveawayCampaignById(campaignId);
 
     long totalToys = giveawayCampaignDomainService.countTotalToysInCampaign(campaignId);
@@ -170,6 +178,37 @@ public class GiveawayCampaignApplicationServiceImpl implements GiveawayCampaignA
     return giveawayCampaignDomainService.hasUserParticipated(userId, campaignId);
   }
 
+  @Override
+  @Transactional
+  public ToyParticipationDTO participateInGiveaway(Long userId, Long campaignId,
+      Integer level, String preferences) {
+    // Validate level parameter
+    if (level == null || level < 1 || level > 3) {
+      throw new IllegalArgumentException("Level phải từ 1 đến 3");
+    }
+
+    ToyParticipation participation;
+
+    // Delegate to appropriate domain service method based on level
+    switch (level) {
+      case 1:
+        participation = giveawayCampaignDomainService.participateInGiveaway(userId, campaignId);
+        break;
+      case 2:
+        participation = giveawayCampaignDomainService.participateInGiveawayOptimized(userId, campaignId);
+        break;
+      case 3:
+        participation = giveawayCampaignDomainService.participateInGiveawayAdvanced(
+            userId, campaignId, preferences);
+        break;
+      default:
+        throw new IllegalArgumentException("Level không hợp lệ: " + level);
+    }
+
+    // Convert to DTO and return
+    return mapToToyParticipationDTO(participation);
+  }
+
   /**
    * Chuyển đổi Event entity thành EventDTO.
    */
@@ -203,4 +242,20 @@ public class GiveawayCampaignApplicationServiceImpl implements GiveawayCampaignA
         .updatedAt(participation.getUpdatedAt().atZone(ZoneId.systemDefault()).toInstant())
         .build();
   }
+
+  @Override
+  public List<Toy> getToysInCampaign(Long campaignId, Integer status, Long userId, String name,
+      Long toyCondition, int page, int limit) {
+
+    Specification<Toy> specification = toySpecification.byFieldId("campaignId", campaignId)
+        .and(toySpecification.byFieldId("userId", userId))
+        .and(toySpecification.byStatus(status))
+        .and(toySpecification.byNameLike(name))
+        .and(toySpecification.byToyCondition(toyCondition));
+
+    Pageable pageable = PageRequest.of(page - 1, limit);
+
+    return giveawayCampaignDomainService.getToysInCampaign(specification, pageable);
+  }
+
 }

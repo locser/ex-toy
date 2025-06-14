@@ -2,14 +2,18 @@ package locser.persistence.repository;
 
 import java.util.List;
 import java.util.Optional;
-import locser.persistence.mapper.ToyJPAMapper;
-import locser.toy.domain.model.entity.Toy;
-import locser.toy.domain.repository.ToyRepository;
+
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Direction;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
+
+import locser.persistence.mapper.ToyJPAMapper;
+import locser.toy.domain.model.entity.Toy;
+import locser.toy.domain.model.enums.ToyStatus;
+import locser.toy.domain.repository.ToyRepository;
 
 /**
  * Implementation of ToyRepository using JPA.
@@ -17,6 +21,7 @@ import org.springframework.stereotype.Service;
 @Service
 public class ToyInfrasRepositoryImpl implements ToyRepository {
 
+  private static final long ALL_RECORDS = -1L;
   private final ToyJPAMapper toyJPAMapper;
 
   public ToyInfrasRepositoryImpl(ToyJPAMapper toyJPAMapper) {
@@ -80,79 +85,144 @@ public class ToyInfrasRepositoryImpl implements ToyRepository {
     Sort sort = createSort(sortBy, sortDirection);
     Pageable pageable = PageRequest.of(page, size, sort);
 
-    if (userId != null && status != null && campaignId != null) {
-      // Tìm theo userId, status và campaignId
-      return toyJPAMapper.findByUserIdAndStatus(userId, status, pageable).getContent();
-    } else if (userId != null && status != null) {
-      // Tìm theo userId và status
-      return toyJPAMapper.findByUserIdAndStatus(userId, status, pageable).getContent();
-    } else if (userId != null && campaignId != null) {
-      // Tìm theo userId và campaignId
-      return toyJPAMapper.findByUserIdAndCampaignId(userId, campaignId, pageable).getContent();
-    } else if (status != null && campaignId != null) {
-      // Tìm theo status và campaignId (cần thêm method trong JPA repository)
-      return toyJPAMapper.findAll(pageable).getContent();
-    } else if (userId != null) {
-      // Tìm theo userId
-      return toyJPAMapper.findByUserId(userId, pageable).getContent();
-    } else if (status != null) {
-      // Tìm theo status
-      return toyJPAMapper.findByStatus(status, pageable).getContent();
-    } else if (campaignId != null) {
-      // Tìm theo campaignId
-      return toyJPAMapper.findByCampaignId(campaignId, pageable).getContent();
-    } else {
-      // Tìm tất cả
-      return toyJPAMapper.findAll(pageable).getContent();
-    }
+    // Convert special value to null for filtering
+    Long effectiveUserId = convertToNullIfAllRecords(userId);
+
+    return findToysWithFilters(effectiveUserId, status, campaignId, pageable);
   }
 
   @Override
   public long count(Long userId, Integer status, Long campaignId) {
-    if (userId != null && status != null && campaignId != null) {
-      // Đếm theo userId, status và campaignId
+    // Convert special value to null for filtering
+    Long effectiveUserId = convertToNullIfAllRecords(userId);
+
+    return countToysWithFilters(effectiveUserId, status, campaignId);
+  }
+
+  /**
+   * Converts the special value ALL_RECORDS (-1) to null to indicate no filtering.
+   * Any other value is returned as is.
+   *
+   * @param value The value to check
+   * @return null if value is ALL_RECORDS, otherwise the original value
+   */
+  private Long convertToNullIfAllRecords(Long value) {
+    return (value != null && value == ALL_RECORDS) ? null : value;
+  }
+
+  /**
+   * Finds toys based on the provided filters and pagination.
+   *
+   * @param userId     User ID filter (null means no filtering)
+   * @param status     Status filter
+   * @param campaignId Campaign ID filter
+   * @param pageable   Pagination information
+   * @return List of filtered toys
+   */
+  private List<Toy> findToysWithFilters(Long userId, Integer status, Long campaignId, Pageable pageable) {
+    // Case 1: All filters are present
+    if (allFiltersPresent(userId, status, campaignId)) {
+      return toyJPAMapper.findByUserIdAndStatus(userId, status, pageable).getContent();
+    }
+
+    // Case 2: User ID and Status filters
+    if (userId != null && status != null) {
+      return toyJPAMapper.findByUserIdAndStatus(userId, status, pageable).getContent();
+    }
+
+    // Case 3: User ID and Campaign ID filters
+    if (userId != null && campaignId != null) {
+      return toyJPAMapper.findByUserIdAndCampaignId(userId, campaignId, pageable).getContent();
+    }
+
+    // Case 4: Status and Campaign ID filters
+    if (status != null && campaignId != null) {
+      return toyJPAMapper.findAll(pageable).getContent();
+    }
+
+    // Case 5: Single filters
+    if (userId != null) {
+      return toyJPAMapper.findByUserId(userId, pageable).getContent();
+    }
+    if (status != null) {
+      return toyJPAMapper.findByStatus(status, pageable).getContent();
+    }
+    if (campaignId != null) {
+      return toyJPAMapper.findByCampaignId(campaignId, pageable).getContent();
+    }
+
+    // Case 6: No filters
+    return toyJPAMapper.findAll(pageable).getContent();
+  }
+
+  /**
+   * Counts toys based on the provided filters.
+   *
+   * @param userId     User ID filter (null means no filtering)
+   * @param status     Status filter
+   * @param campaignId Campaign ID filter
+   * @return Total count of filtered toys
+   */
+  private long countToysWithFilters(Long userId, Integer status, Long campaignId) {
+    // Case 1: All filters are present
+    if (allFiltersPresent(userId, status, campaignId)) {
       return toyJPAMapper.countByUserIdAndCampaignId(userId, campaignId);
-    } else if (userId != null && status != null) {
-      // Đếm theo userId và status
+    }
+
+    // Case 2: User ID and Status filters
+    if (userId != null && status != null) {
       return toyJPAMapper.countByUserIdAndStatus(userId, status);
-    } else if (userId != null && campaignId != null) {
-      // Đếm theo userId và campaignId
+    }
+
+    // Case 3: User ID and Campaign ID filters
+    if (userId != null && campaignId != null) {
       return toyJPAMapper.countByUserIdAndCampaignId(userId, campaignId);
-    } else if (status != null && campaignId != null) {
-      // Đếm theo status và campaignId (cần thêm method trong JPA repository)
-      return toyJPAMapper.count();
-    } else if (userId != null) {
-      // Đếm theo userId
-      return toyJPAMapper.countByUserId(userId);
-    } else if (status != null) {
-      // Đếm theo status
-      return toyJPAMapper.countByStatus(status);
-    } else if (campaignId != null) {
-      // Đếm theo campaignId
-      return toyJPAMapper.countByCampaignId(campaignId);
-    } else {
-      // Đếm tất cả
+    }
+
+    // Case 4: Status and Campaign ID filters
+    if (status != null && campaignId != null) {
       return toyJPAMapper.count();
     }
+
+    // Case 5: Single filters
+    if (userId != null) {
+      return toyJPAMapper.countByUserId(userId);
+    }
+    if (status != null) {
+      return toyJPAMapper.countByStatus(status);
+    }
+    if (campaignId != null) {
+      return toyJPAMapper.countByCampaignId(campaignId);
+    }
+
+    // Case 6: No filters
+    return toyJPAMapper.count();
+  }
+
+  /**
+   * Checks if all filters are present.
+   *
+   * @param userId     User ID filter
+   * @param status     Status filter
+   * @param campaignId Campaign ID filter
+   * @return true if all filters are present
+   */
+  private boolean allFiltersPresent(Long userId, Integer status, Long campaignId) {
+    return userId != null && status != null && campaignId != null;
   }
 
   @Override
   public List<Toy> findByCampaignIdAndStatus(Long campaignId, Integer status) {
-    return List.of();
+    return toyJPAMapper.findByCampaignIdAndStatus(campaignId, status);
   }
 
   @Override
   public long countByCampaignIdAndStatus(Long campaignId, Integer status) {
-    return 0;
+    return toyJPAMapper.countByCampaignIdAndStatus(campaignId, status);
   }
 
   @Override
   public int updateStatusByCampaignId(Long campaignId, Integer oldStatus, Integer newStatus) {
-    return 0;
-  }
-
-  @Override
-  public int addToysToCampaign(List<Long> toyIds, Long campaignId, Integer newStatus) {
     return 0;
   }
 
@@ -167,4 +237,40 @@ public class ToyInfrasRepositoryImpl implements ToyRepository {
     Direction direction = sortDirection.equalsIgnoreCase("asc") ? Direction.ASC : Direction.DESC;
     return Sort.by(direction, sortBy);
   }
+
+  @Override
+  public List<Toy> findByIdIn(List<Long> ids) {
+    return toyJPAMapper.findByIdIn(ids);
+  }
+
+  @Override
+  public List<Toy> findByIdInAndStatus(List<Long> ids, int status) {
+    return toyJPAMapper.findByIdInAndStatus(ids, status);
+  }
+
+  @Override
+  public int addToysToCampaign(List<Long> toyIds, Long campaignId) {
+    return toyJPAMapper.updateStatusAndCampaignIdByIds(toyIds, campaignId, ToyStatus.GIVEAWAY_AVAILABLE.getValue());
+  }
+
+  @Override
+  public List<Toy> findAll(Specification<Toy> specification, Pageable pageable) {
+    // sort by id desc
+    Pageable sortedPageable = PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(),
+        Sort.by(Sort.Direction.DESC, "id"));
+    return toyJPAMapper.findAll(specification, sortedPageable).getContent();
+  }
+
+  @Override
+  public List<Toy> findAll(Specification<Toy> specification) {
+    return toyJPAMapper.findAll(specification);
+  }
+
+  @Override
+  public Toy findRandomAvailableToyInCampaign(Long campaignId) {
+    return toyJPAMapper.findRandomAvailableToyInCampaign(
+        campaignId,
+        ToyStatus.GIVEAWAY_AVAILABLE.getValue());
+  }
+
 }

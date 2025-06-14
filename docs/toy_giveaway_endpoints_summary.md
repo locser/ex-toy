@@ -9,20 +9,23 @@ Tóm tắt các endpoints cho chức năng **Toy Giveaway Campaign** theo từng
 ## Level 1: Basic Implementation (1-100 users)
 
 ### 1. 🔧 **Admin: Tạo Giveaway Campaign**
+
 ```
 POST /api/v1/admin/giveaway-campaigns
 ```
 
 **Processing Notes:**
+
 ```
 ✅ Validate request data (dates, required fields)
 ✅ Set event.type = GIVEAWAY (2)
-✅ Set event.status = UPCOMING (1) 
+✅ Set event.status = UPCOMING (1)
 ✅ Save to events table
 ✅ Return campaign details
 ```
 
 **Key Logic:**
+
 - Validate `end_date > start_date`
 - Auto-set type = GIVEAWAY
 - Generate unique campaign ID
@@ -30,22 +33,25 @@ POST /api/v1/admin/giveaway-campaigns
 ---
 
 ### 2. 🔧 **Admin: Thêm Toys vào Campaign**
+
 ```
 POST /api/v1/admin/giveaway-campaigns/{campaignId}/toys
 Body: {"toy_ids": [1,2,3,4,5]}
 ```
 
 **Processing Notes:**
+
 ```
 ✅ Validate campaignId exists and type = GIVEAWAY
 ✅ Validate all toy_ids exist and status = AVAILABLE
-✅ Batch update toys: 
+✅ Batch update toys:
    - campaignId = {campaignId}
    - status = GIVEAWAY_AVAILABLE (6)
 ✅ Return updated toy count
 ```
 
 **Key Logic:**
+
 - Atomic batch update for all toys
 - Validate toys are not already in other campaigns
 - Update toy status to GIVEAWAY_AVAILABLE
@@ -53,11 +59,13 @@ Body: {"toy_ids": [1,2,3,4,5]}
 ---
 
 ### 3. 👥 **Public: Danh sách Giveaway Campaigns**
+
 ```
 GET /api/v1/giveaway-campaigns?page=1&limit=10&status=2
 ```
 
 **Processing Notes:**
+
 ```
 ✅ Query events where type = GIVEAWAY
 ✅ Filter by status if provided (ACTIVE = 2)
@@ -67,6 +75,7 @@ GET /api/v1/giveaway-campaigns?page=1&limit=10&status=2
 ```
 
 **Key Logic:**
+
 - Only show campaigns with type = GIVEAWAY
 - Include available toy count for each campaign
 - Support filtering by status
@@ -74,12 +83,14 @@ GET /api/v1/giveaway-campaigns?page=1&limit=10&status=2
 ---
 
 ### 4. 👥 **Public: Chi tiết Giveaway Campaign**
+
 ```
 GET /api/v1/giveaway-campaigns/{campaignId}
 Header: X-User-Id: 123
 ```
 
 **Processing Notes:**
+
 ```
 ✅ Get event by id where type = GIVEAWAY
 ✅ Count total toys in campaign
@@ -89,43 +100,77 @@ Header: X-User-Id: 123
 ```
 
 **Key Logic:**
+
 - Show campaign details with real-time toy availability
 - Include user's participation status
 - Validate campaign is giveaway type
 
 ---
 
-### 5. 🎯 **Core: Tham gia Giveaway Campaign**
+### 5. 🎯 **Core: Tham gia Giveaway Campaign (3 LEVELS)**
+
 ```
-POST /api/v1/giveaway-campaigns/{campaignId}/participate
+POST /api/v1/giveaway-campaigns/{campaignId}/participate?level={1|2|3}
 Header: X-User-Id: 123
+Query: level=1 (Basic), level=2 (Optimized), level=3 (Advanced)
 ```
 
-**Processing Notes:**
+**Level 1 - Basic (1-100 users):**
+
 ```
 ✅ Validate campaign exists, active, not expired
 ✅ Check user hasn't participated (toy_participations table)
 ✅ Get random available toy (status = GIVEAWAY_AVAILABLE)
-✅ Atomic transaction:
+✅ Atomic database transaction:
    - Update toy: userId = {userId}, status = GIVEAWAY_CLAIMED
    - Insert toy_participations record
 ✅ Return claimed toy details
+✅ Performance target: < 500ms
+```
+
+**Level 2 - Optimized (100-1000 users):**
+
+```
+✅ Check Redis cache for campaign eligibility
+✅ Use Redis counter for available toy count validation
+✅ Implement optimistic locking for toy selection
+✅ Retry mechanism with exponential backoff (max 3 retries)
+✅ Atomic database transaction
+✅ Cache user participation status (TTL: 1 hour)
+✅ Invalidate relevant caches after successful participation
+✅ Performance target: < 300ms
+```
+
+**Level 3 - Advanced (1000+ users):**
+
+```
+✅ Acquire Redis distributed lock: "campaign:{campaignId}:participate"
+✅ Smart toy selection based on user preferences
+✅ Apply fairness algorithm to prevent gaming
+✅ Distributed transaction across multiple services
+✅ Real-time WebSocket notification to all clients
+✅ Advanced analytics tracking
+✅ Async event publishing for downstream services
+✅ Performance target: < 200ms
 ```
 
 **Key Logic:**
-- **CRITICAL**: Atomic transaction to prevent race conditions
-- One participation per user per campaign
-- Random toy selection from available pool
-- Update both toy and participation tables
+
+- **CRITICAL**: Choose appropriate level based on load
+- Graceful degradation between levels
+- Comprehensive error handling for all scenarios
+- Performance monitoring and alerting
 
 ---
 
 ### 6. 👤 **User: Lịch sử tham gia**
+
 ```
 GET /api/v1/users/{userId}/giveaway-participations?page=1&limit=10
 ```
 
 **Processing Notes:**
+
 ```
 ✅ Query toy_participations by userId
 ✅ Join with toys and events tables
@@ -134,6 +179,7 @@ GET /api/v1/users/{userId}/giveaway-participations?page=1&limit=10
 ```
 
 **Key Logic:**
+
 - Show user's participation history across all campaigns
 - Include toy and campaign details
 - Support pagination for large histories
@@ -143,12 +189,14 @@ GET /api/v1/users/{userId}/giveaway-participations?page=1&limit=10
 ## Level 2: Performance Optimization (100-1000 users)
 
 ### 7. 🚀 **Enhanced: Tham gia với Caching**
+
 ```
 POST /api/v1/giveaway-campaigns/{campaignId}/participate
 Header: X-User-Id: 123
 ```
 
 **Additional Processing Notes:**
+
 ```
 ✅ Check Redis cache for campaign status
 ✅ Use Redis counter for available toy count
@@ -159,6 +207,7 @@ Header: X-User-Id: 123
 ```
 
 **Key Optimizations:**
+
 - Redis cache for campaign metadata
 - Optimistic locking to handle concurrency
 - Cache invalidation strategy
@@ -167,11 +216,13 @@ Header: X-User-Id: 123
 ---
 
 ### 8. 📊 **Admin: Real-time Campaign Statistics**
+
 ```
 GET /api/v1/admin/giveaway-campaigns/{campaignId}/stats
 ```
 
 **Processing Notes:**
+
 ```
 ✅ Get stats from Redis cache if available (TTL: 1 min)
 ✅ Fallback to database aggregation if cache miss
@@ -181,6 +232,7 @@ GET /api/v1/admin/giveaway-campaigns/{campaignId}/stats
 ```
 
 **Key Logic:**
+
 - Cache-first strategy for performance
 - Real-time statistics calculation
 - Automatic cache refresh
@@ -188,12 +240,14 @@ GET /api/v1/admin/giveaway-campaigns/{campaignId}/stats
 ---
 
 ### 9. 🔧 **Admin: Bulk Toy Management**
+
 ```
 POST /api/v1/admin/giveaway-campaigns/{campaignId}/toys/bulk
 Body: {"action": "add", "toy_criteria": {...}}
 ```
 
 **Processing Notes:**
+
 ```
 ✅ Query toys matching criteria (category, condition, etc.)
 ✅ Validate toys are eligible for giveaway
@@ -203,6 +257,7 @@ Body: {"action": "add", "toy_criteria": {...}}
 ```
 
 **Key Logic:**
+
 - Bulk operations for efficiency
 - Chunked processing for large datasets
 - Cache updates for consistency
@@ -212,12 +267,14 @@ Body: {"action": "add", "toy_criteria": {...}}
 ## Level 3: Advanced Features (1000+ users)
 
 ### 10. 🔒 **Enhanced: Distributed Locking Participation**
+
 ```
 POST /api/v1/giveaway-campaigns/{campaignId}/participate
 Header: X-User-Id: 123
 ```
 
 **Additional Processing Notes:**
+
 ```
 ✅ Acquire Redis distributed lock: "campaign:{campaignId}:participate"
 ✅ Lock timeout: 5 seconds
@@ -228,6 +285,7 @@ Header: X-User-Id: 123
 ```
 
 **Key Features:**
+
 - Distributed locking for high concurrency
 - Lock timeout and cleanup
 - Graceful failure handling
@@ -235,11 +293,13 @@ Header: X-User-Id: 123
 ---
 
 ### 11. 📡 **Real-time: WebSocket Updates**
+
 ```
 WS /api/v1/giveaway-campaigns/{campaignId}/live
 ```
 
 **Processing Notes:**
+
 ```
 ✅ Establish WebSocket connection
 ✅ Subscribe to campaign events (toy claimed, campaign status)
@@ -249,6 +309,7 @@ WS /api/v1/giveaway-campaigns/{campaignId}/live
 ```
 
 **Key Features:**
+
 - Real-time toy availability updates
 - Live participation notifications
 - Connection management
@@ -256,6 +317,7 @@ WS /api/v1/giveaway-campaigns/{campaignId}/live
 ---
 
 ### 12. 🎯 **Advanced: Smart Toy Selection**
+
 ```
 POST /api/v1/giveaway-campaigns/{campaignId}/participate
 Header: X-User-Id: 123
@@ -263,6 +325,7 @@ Body: {"preferences": {"category": "Action Figures", "condition": [1,2]}}
 ```
 
 **Processing Notes:**
+
 ```
 ✅ Parse user preferences
 ✅ Query available toys matching preferences
@@ -272,6 +335,7 @@ Body: {"preferences": {"category": "Action Figures", "condition": [1,2]}}
 ```
 
 **Key Features:**
+
 - User preference-based toy selection
 - Fairness algorithms
 - Analytics and reporting
@@ -279,11 +343,13 @@ Body: {"preferences": {"category": "Action Figures", "condition": [1,2]}}
 ---
 
 ### 13. 📊 **Analytics: Campaign Performance**
+
 ```
 GET /api/v1/admin/giveaway-campaigns/{campaignId}/analytics
 ```
 
 **Processing Notes:**
+
 ```
 ✅ Aggregate participation data by time periods
 ✅ Calculate conversion rates and engagement metrics
@@ -293,6 +359,7 @@ GET /api/v1/admin/giveaway-campaigns/{campaignId}/analytics
 ```
 
 **Key Features:**
+
 - Advanced analytics and reporting
 - Performance metrics
 - Business intelligence data
@@ -300,12 +367,14 @@ GET /api/v1/admin/giveaway-campaigns/{campaignId}/analytics
 ---
 
 ### 14. 🔔 **Notifications: Campaign Events**
+
 ```
 POST /api/v1/giveaway-campaigns/{campaignId}/notify
 Body: {"event": "campaign_started", "target": "all_users"}
 ```
 
 **Processing Notes:**
+
 ```
 ✅ Validate notification event and target
 ✅ Queue notification messages to RabbitMQ
@@ -315,6 +384,7 @@ Body: {"event": "campaign_started", "target": "all_users"}
 ```
 
 **Key Features:**
+
 - Multi-channel notifications
 - Async processing with queues
 - Delivery tracking
@@ -325,23 +395,25 @@ Body: {"event": "campaign_started", "target": "all_users"}
 
 ### Common Errors Across All Levels
 
-| Error Code | Message | HTTP Status |
-|------------|---------|-------------|
-| 4001 | Campaign not found | 404 |
-| 4002 | Campaign not active | 400 |
-| 4003 | User already participated | 409 |
-| 4004 | No toys available | 410 |
-| 4005 | Campaign not started yet | 400 |
-| 4006 | Campaign expired | 400 |
-| 4007 | Invalid campaign type | 400 |
+| Error Code | Message                   | HTTP Status |
+| ---------- | ------------------------- | ----------- |
+| 4001       | Campaign not found        | 404         |
+| 4002       | Campaign not active       | 400         |
+| 4003       | User already participated | 409         |
+| 4004       | No toys available         | 410         |
+| 4005       | Campaign not started yet  | 400         |
+| 4006       | Campaign expired          | 400         |
+| 4007       | Invalid campaign type     | 400         |
 
 ### Level-Specific Errors
 
 **Level 2:**
+
 - 4008: Cache unavailable, using fallback
 - 4009: Optimistic lock failure, retry required
 
 **Level 3:**
+
 - 4010: Distributed lock acquisition failed
 - 4011: WebSocket connection limit exceeded
 - 4012: Notification delivery failed
@@ -351,17 +423,20 @@ Body: {"event": "campaign_started", "target": "all_users"}
 ## Performance Targets
 
 ### Level 1
+
 - ✅ API response time < 500ms (95th percentile)
 - ✅ Support 100 concurrent users
 - ✅ Zero data inconsistency
 
-### Level 2  
+### Level 2
+
 - ✅ API response time < 300ms (95th percentile)
 - ✅ Support 1000 concurrent users
 - ✅ Cache hit rate > 80%
 
 ### Level 3
-- ✅ API response time < 200ms (95th percentile)  
+
+- ✅ API response time < 200ms (95th percentile)
 - ✅ Support 10000+ concurrent users
 - ✅ Real-time notification latency < 1s
 
@@ -373,7 +448,7 @@ Body: {"event": "campaign_started", "target": "all_users"}
 🔥 High Priority (Level 1):
    - Endpoints 1-6: Core functionality
 
-⚡ Medium Priority (Level 2):  
+⚡ Medium Priority (Level 2):
    - Endpoints 7-9: Performance optimization
 
 🚀 Low Priority (Level 3):

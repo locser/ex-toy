@@ -108,6 +108,11 @@ public class EventInfrasRepositoryImpl implements EventRepository {
     return 0;
   }
 
+  @Override
+  public int decrementAvailableToys(Long campaignId) {
+    return eventJPAMapper.decrementAvailableToys(campaignId);
+  }
+
   /**
    * Tạo đối tượng Sort dựa trên tên trường và hướng sắp xếp.
    *

@@ -7,8 +7,8 @@ import org.springframework.context.annotation.ComponentScan;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 
 @SpringBootApplication
-@EntityScan(basePackages = {"locser.toy.domain.model.entity"})
-@EnableJpaRepositories(basePackages = {"locser.persistence.mapper"})
+@EntityScan(basePackages = { "locser.toy.domain.model.entity" })
+@EnableJpaRepositories(basePackages = { "locser.persistence.mapper" })
 @ComponentScan(basePackages = {
     "locser",
     "locser.application",

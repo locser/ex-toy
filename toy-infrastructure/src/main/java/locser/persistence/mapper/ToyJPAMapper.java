@@ -7,7 +7,12 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
+import org.springframework.data.jpa.repository.Modifying;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 
 import locser.toy.domain.model.entity.Toy;
 
@@ -15,7 +20,7 @@ import locser.toy.domain.model.entity.Toy;
  * JPA Repository interface for Toy entity.
  */
 @Repository
-public interface ToyJPAMapper extends JpaRepository<Toy, Long> {
+public interface ToyJPAMapper extends JpaRepository<Toy, Long>, JpaSpecificationExecutor<Toy> {
 
   /**
    * Find a toy by its ID.
@@ -202,4 +207,57 @@ public interface ToyJPAMapper extends JpaRepository<Toy, Long> {
    * @return Number of toys belonging to the user in the given campaign
    */
   long countByUserIdAndCampaignId(Long userId, Long campaignId);
+
+  /**
+   * Find toys by list of IDs.
+   *
+   * @param ids List of toy IDs
+   * @return List of toys with the given IDs
+   */
+  List<Toy> findByIdIn(List<Long> ids);
+
+  /**
+   * Find toys by list of IDs and status.
+   *
+   * @param ids    List of toy IDs
+   * @param status Toy status
+   * @return List of toys with the given IDs and status
+   */
+  List<Toy> findByIdInAndStatus(List<Long> ids, int status);
+
+  /**
+   * Update toys status and campaign ID by list of IDs.
+   *
+   * @param toyIds     List of toy IDs
+   * @param campaignId Campaign ID
+   * @param status     New status
+   * @return Number of toys updated
+   */
+  @Modifying
+  @Transactional
+  @Query("UPDATE Toy t SET t.status = :status, t.campaignId = :campaignId WHERE t.id IN :toyIds")
+  int updateStatusAndCampaignIdByIds(List<Long> toyIds, Long campaignId, int status);
+
+  long countByCampaignIdAndStatus(Long campaignId, Integer status);
+
+  List<Toy> findByCampaignIdAndStatus(Long campaignId, Integer status);
+
+  /**
+   * Get a random available toy from a campaign using native SQL for better
+   * performance.
+   * This uses RAND() function which is more efficient than loading all toys.
+   *
+   * @param campaignId The campaign ID
+   * @param status     The toy status
+   * @return A random available toy, or null if none available
+   */
+  @Query(value = "SELECT * FROM toys t " +
+      "WHERE t.campaign_id = :campaignId " +
+      "AND t.status = :status " +
+      "ORDER BY RAND() " +
+      "LIMIT 1", nativeQuery = true)
+  Toy findRandomAvailableToyInCampaign(
+      @Param("campaignId") Long campaignId,
+      @Param("status") Integer status);
+
 }

@@ -2,6 +2,7 @@ package locser.toy.domain.repository;
 
 import java.util.List;
 import java.util.Optional;
+
 import locser.toy.domain.model.entity.Event;
 
 public interface EventRepository {
@@ -81,4 +82,12 @@ public interface EventRepository {
    * @return Number of events with the given type
    */
   long countByType(Integer type, Integer status);
+
+  /**
+   * Decrement the available toys count for a campaign.
+   *
+   * @param campaignId The campaign ID
+   * @return Number of rows updated (1 if successful, 0 if no toys available)
+   */
+  int decrementAvailableToys(Long campaignId);
 }

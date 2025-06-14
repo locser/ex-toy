@@ -133,22 +133,65 @@ CREATE TABLE toy_participations (
 5. Return campaign details + participation status
 ```
 
-### 5. Tham gia Giveaway Campaign
+### 5. Tham gia Giveaway Campaign (CORE FEATURE - 3 LEVELS)
 
 **Endpoint:** `POST /api/v1/giveaway-campaigns/{campaignId}/participate`
 
 **Headers:** `X-User-Id: 123`
 
-**Processing Notes:**
+**Query Parameters:**
+
+- `level` (optional): Performance level (1=Basic, 2=Optimized, 3=Advanced). Default: 1
+- `preferences` (optional): JSON string for user preferences (Level 3 only)
+
+**Request Body (Level 3 only):**
+
+```json
+{
+  "preferences": {
+    "category": "Action Figures",
+    "condition": [1, 2]
+  }
+}
+```
+
+**Processing Notes - Level 1 (Basic):**
 
 ```
 1. Validate campaign exists, active, and not expired
 2. Check user hasn't participated (toy_participations table)
 3. Get random available toy (status = GIVEAWAY_AVAILABLE)
-4. Atomic update:
-   - toy.userId = userId, status = GIVEAWAY_CLAIMED
+4. Atomic database transaction:
+   - Update toy: userId = userId, status = GIVEAWAY_CLAIMED
    - Insert toy_participations record
 5. Return claimed toy details
+Performance target: < 500ms, 100 concurrent users
+```
+
+**Processing Notes - Level 2 (Optimized):**
+
+```
+1. Check Redis cache for campaign eligibility
+2. Use Redis counter for available toy count validation
+3. Implement optimistic locking for toy selection
+4. Retry mechanism with exponential backoff (max 3 retries)
+5. Atomic database transaction
+6. Cache user participation status (TTL: 1 hour)
+7. Invalidate relevant caches after successful participation
+Performance target: < 300ms, 1000 concurrent users
+```
+
+**Processing Notes - Level 3 (Advanced):**
+
+```
+1. Acquire Redis distributed lock: "campaign:{campaignId}:participate"
+2. Smart toy selection based on user preferences
+3. Apply fairness algorithm to prevent gaming
+4. Distributed transaction across multiple services
+5. Real-time WebSocket notification to all clients
+6. Advanced analytics tracking
+7. Async event publishing for downstream services
+Performance target: < 200ms, 10000+ concurrent users
 ```
 
 **Response Success:**

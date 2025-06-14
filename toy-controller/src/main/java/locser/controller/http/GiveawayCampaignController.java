@@ -1,6 +1,7 @@
 package locser.controller.http;
 
-import org.springframework.web.bind.annotation.DeleteMapping;
+import java.util.List;
+
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -11,6 +12,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Min;
 import locser.application.services.giveaway.GiveawayCampaignApplicationService;
 import locser.controller.dto.giveaway.AddToysToGiveawayCampaignRequestDTO;
 import locser.controller.dto.giveaway.CreateGiveawayCampaignRequestDTO;
@@ -23,6 +25,7 @@ import locser.toy.domain.model.dto.CreateGiveawayCampaignRequest;
 import locser.toy.domain.model.dto.EventDTO;
 import locser.toy.domain.model.dto.GiveawayCampaignStatsDTO;
 import locser.toy.domain.model.dto.ToyParticipationDTO;
+import locser.toy.domain.model.entity.Toy;
 import locser.toy.domain.validation.annotation.ValidId;
 import locser.util.PageResponse;
 import locser.util.PageResponseDTO;
@@ -151,7 +154,7 @@ public class GiveawayCampaignController {
    * @param id ID của campaign cần xóa
    * @return Thông báo thành công
    */
-  @DeleteMapping("/admin/giveaway-campaigns/{id}")
+  @PostMapping("/admin/giveaway-campaigns/{id}/delete")
   public BaseResponse<Void> deleteGiveawayCampaign(@PathVariable @ValidId Long id) {
     giveawayCampaignService.deleteGiveawayCampaign(id);
     return BaseResponse.success(null, "Xóa chiến dịch thành công");
@@ -169,12 +172,37 @@ public class GiveawayCampaignController {
       @PathVariable @ValidId Long campaignId,
       @Valid @RequestBody AddToysToGiveawayCampaignRequestDTO requestDTO) {
 
-    int addedCount = giveawayCampaignService.addToysToGiveawayCampaign(campaignId,
+    int addedCount = giveawayCampaignService.addToysToGiveawayCampaign((Long) campaignId,
         GiveawayCampaignDTOMapper.toAddToysToGiveawayCampaignRequest(requestDTO));
 
     return BaseResponse.success(
         "Đã thêm " + addedCount + " đồ chơi vào chiến dịch thành công",
         "Thêm đồ chơi vào chiến dịch thành công");
+  }
+
+  /**
+   * Lấy danh sách toys có sẵn trong giveaway campaign.
+   *
+   * @param campaignId ID của campaign
+   * @param requestDTO Danh sách toy IDs cần thêm
+   * @return Danh sách toys có sẵn trong giveaway campaign
+   */
+  @GetMapping("/admin/giveaway-campaigns/{campaignId}/toys")
+  public BaseResponse<List<Toy>> getAvailableToysInGiveawayCampaign(
+      @PathVariable @ValidId Long campaignId,
+      @RequestParam(required = false) Integer status,
+      @RequestParam(required = false) Long userId,
+      @RequestParam(required = false) Long toyCondition,
+      @RequestParam(required = false) String name,
+      @RequestParam(defaultValue = AppConstants.DEFAULT_PAGE_NUMBER) @Min(1) int page,
+      @RequestParam(defaultValue = AppConstants.DEFAULT_PAGE_SIZE) @Min(1) int limit) {
+
+    List<Toy> toys = giveawayCampaignService.getToysInCampaign(campaignId, status, userId, name,
+        toyCondition, page, limit);
+
+    return BaseResponse.success(
+        toys,
+        "Lấy phân trang danh sách đồ chơi thành công");
   }
 
   /**
@@ -202,14 +230,14 @@ public class GiveawayCampaignController {
    * @param limit  Số lượng items per page
    * @return Danh sách participations với phân trang
    */
-  @GetMapping("/users/{userId}/giveaway-participations")
+  @GetMapping("/users/giveaway-participations")
   public BaseResponse<PageResponseDTO<ToyParticipationResponseDTO>> getUserParticipations(
-      @PathVariable @ValidId Long userId,
+      @RequestParam(required = true) Long user_id,
       @RequestParam(defaultValue = AppConstants.DEFAULT_PAGE_NUMBER) int page,
       @RequestParam(defaultValue = AppConstants.DEFAULT_PAGE_SIZE) int limit) {
 
     PageResponse<ToyParticipationDTO> participations = giveawayCampaignService
-        .getUserParticipations(userId, page, limit);
+        .getUserParticipations(user_id, page, limit);
 
     PageResponseDTO<ToyParticipationResponseDTO> response = PageResponseDTO
         .<ToyParticipationResponseDTO>builder()
@@ -221,5 +249,42 @@ public class GiveawayCampaignController {
         .build();
 
     return BaseResponse.success(response, "Lấy lịch sử tham gia thành công");
+  }
+
+  /**
+   * Tham gia giveaway campaign để nhận toy miễn phí.
+   * Hỗ trợ 3 levels performance: Basic (1), Optimized (2), Advanced (3).
+   *
+   * @param campaignId  ID của campaign
+   * @param userId      ID của user (từ header)
+   * @param level       Performance level (1=Basic, 2=Optimized, 3=Advanced)
+   * @param preferences User preferences (JSON string, optional)
+   * @return Thông tin toy đã claim và participation
+   */
+  @PostMapping("/giveaway-campaigns/{campaignId}/participate")
+  public BaseResponse<ToyParticipationResponseDTO> participateInGiveaway(
+      @PathVariable @ValidId Long campaignId,
+      @RequestHeader("X-User-Id") Long userId,
+      @RequestParam(value = "level", defaultValue = "1") Integer level,
+      @RequestParam(value = "preferences", required = false) String preferences) {
+
+    // Validate level parameter
+    if (level < 1 || level > 3) {
+      throw new IllegalArgumentException("Level phải từ 1 đến 3");
+    }
+
+    ToyParticipationDTO participation = giveawayCampaignService
+        .participateInGiveaway(userId, campaignId, level, preferences);
+
+    String message = switch (level) {
+      case 1 -> "Nhận đồ chơi thành công (Basic)";
+      case 2 -> "Nhận đồ chơi thành công (Optimized)";
+      case 3 -> "Nhận đồ chơi thành công (Advanced)";
+      default -> "Nhận đồ chơi thành công";
+    };
+
+    return BaseResponse.success(
+        GiveawayCampaignDTOMapper.toToyParticipationResponseDTO(participation),
+        message);
   }
 }

@@ -2,11 +2,14 @@ package locser.toy.domain.service.impl;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import locser.toy.domain.exception.BadRequestException;
-import locser.toy.domain.exception.ResourceNotFoundException;
 import locser.toy.domain.model.entity.Event;
 import locser.toy.domain.model.entity.Toy;
 import locser.toy.domain.model.entity.ToyParticipation;
@@ -14,6 +17,7 @@ import locser.toy.domain.model.enums.EventStatus;
 import locser.toy.domain.model.enums.EventType;
 import locser.toy.domain.model.enums.ToyStatus;
 import locser.toy.domain.repository.EventRepository;
+import locser.toy.domain.repository.GiveawayCampaignRepository;
 import locser.toy.domain.repository.ToyParticipationRepository;
 import locser.toy.domain.repository.ToyRepository;
 import locser.toy.domain.service.GiveawayCampaignDomainService;
@@ -25,254 +29,378 @@ import locser.toy.domain.validation.IdValidator;
 @Service
 public class GiveawayCampaignDomainServiceImpl implements GiveawayCampaignDomainService {
 
-    private final EventRepository eventRepository;
-    private final ToyRepository toyRepository;
-    private final ToyParticipationRepository toyParticipationRepository;
+  private final EventRepository eventRepository;
+  private final ToyRepository toyRepository;
+  private final ToyParticipationRepository toyParticipationRepository;
+  private final GiveawayCampaignRepository giveawayCampaignRepository;
 
-    public GiveawayCampaignDomainServiceImpl(
-            EventRepository eventRepository,
-            ToyRepository toyRepository,
-            ToyParticipationRepository toyParticipationRepository) {
-        this.eventRepository = eventRepository;
-        this.toyRepository = toyRepository;
-        this.toyParticipationRepository = toyParticipationRepository;
+  public GiveawayCampaignDomainServiceImpl(EventRepository eventRepository,
+      ToyRepository toyRepository,
+      ToyParticipationRepository toyParticipationRepository,
+      GiveawayCampaignRepository giveawayCampaignRepository) {
+    this.eventRepository = eventRepository;
+    this.toyRepository = toyRepository;
+    this.toyParticipationRepository = toyParticipationRepository;
+    this.giveawayCampaignRepository = giveawayCampaignRepository;
+  }
+
+  @Override
+  public Event initializeNewGiveawayCampaign(Event campaign) {
+    // Thiết lập các giá trị mặc định
+    campaign.setType(EventType.GIVEAWAY.getValue());
+    campaign.setStatus(EventStatus.UPCOMING.getValue());
+
+    // Xác thực dữ liệu
+    validateCampaignDates(campaign);
+    validateCampaignData(campaign);
+
+    return campaign;
+  }
+
+  @Override
+  public Event getGiveawayCampaignById(Long id) {
+    // Kiểm tra ID phải lớn hơn 0
+    IdValidator.validateId(id, "Campaign");
+
+    Optional<Event> campaign = giveawayCampaignRepository.findById(id);
+    if (campaign.isEmpty()) {
+      throw new BadRequestException("Không tìm thấy chiến dịch");
+    }
+    Event event = campaign.get();
+    if (event.getType() != EventType.GIVEAWAY.getValue()) {
+      throw new BadRequestException("Chiến dịch không phải là giveaway campaign");
+    }
+    return event;
+  }
+
+  @Override
+  public Event validateAndUpdateGiveawayCampaign(Event campaign) {
+    // Xác thực dữ liệu
+    validateCampaignDates(campaign);
+    validateCampaignData(campaign);
+
+    return campaign;
+  }
+
+  @Override
+  public void deleteGiveawayCampaign(Long id) {
+    // Kiểm tra ID phải lớn hơn 0
+    IdValidator.validateId(id, "Campaign");
+
+    Event campaign = getGiveawayCampaignById(id);
+
+    // Soft delete: Chỉ đánh dấu là đã xóa
+    campaign.setStatus(EventStatus.DELETED.getValue());
+    giveawayCampaignRepository.save(campaign);
+  }
+
+  @Override
+  @Transactional
+  public int addToysToGiveawayCampaign(Long campaignId, List<Long> toyIds) {
+    // Kiểm tra ID phải lớn hơn 0
+    IdValidator.validateId(campaignId, "Campaign");
+
+    // Lấy thông tin campaign
+    Event campaign = getGiveawayCampaignById(campaignId);
+
+    // Kiểm tra trạng thái campaign
+    if (campaign.getStatus() != EventStatus.UPCOMING.getValue()) {
+      throw new BadRequestException("Không thể thêm toys vào campaign đã bắt đầu hoặc kết thúc");
     }
 
-    @Override
-    public Event initializeNewGiveawayCampaign(Event campaign) {
-        // Thiết lập các giá trị mặc định
-        campaign.setType(EventType.GIVEAWAY.getValue());
-        campaign.setStatus(EventStatus.UPCOMING.getValue());
-
-        // Xác thực dữ liệu
-        validateCampaignDates(campaign);
-        validateCampaignData(campaign);
-
-        return campaign;
+    // Thêm toys vào campaign
+    int addedCount = toyRepository.addToysToCampaign(toyIds, campaignId);
+    if (addedCount > 0) {
+      // Cập nhật số lượng toys trong campaign
+      giveawayCampaignRepository.updateAvailableToys(campaignId, addedCount);
     }
 
-    @Override
-    public Event getGiveawayCampaignById(Long id) {
-        // Kiểm tra ID phải lớn hơn 0
-        IdValidator.validateId(id, "Campaign");
+    return addedCount;
+  }
 
-        System.out.println("id: " + id + " type: " + EventType.GIVEAWAY.getValue());
+  @Override
+  public List<Toy> getAvailableToysInCampaign(Long campaignId) {
+    // Kiểm tra ID phải lớn hơn 0
+    IdValidator.validateId(campaignId, "Campaign");
 
-        Event campaign = eventRepository.findByIdAndType(id, EventType.GIVEAWAY.getValue())
-                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy chiến dịch phát quà với ID: " + id));
+    // // Lấy thông tin campaign
+    // Event campaign = getGiveawayCampaignById(campaignId);
 
-        return campaign;
+    // // Kiểm tra trạng thái campaign
+    // if (campaign.getStatus() != EventStatus.ONGOING.getValue()) {
+    // throw new BadRequestException("Campaign chưa bắt đầu hoặc đã kết thúc");
+    // }
+
+    return giveawayCampaignRepository.findAvailableToys(campaignId);
+  }
+
+  @Override
+  @Transactional
+  public ToyParticipation participateInGiveaway(Long userId, Long campaignId) {
+    return participateInGiveawayCampaign(userId, campaignId);
+  }
+
+  @Override
+  @Transactional
+  public ToyParticipation participateInGiveawayOptimized(Long userId, Long campaignId) {
+    return participateInGiveawayCampaign(userId, campaignId);
+  }
+
+  @Override
+  @Transactional
+  public ToyParticipation participateInGiveawayAdvanced(Long userId, Long campaignId,
+      String preferences) {
+    // Kiểm tra ID phải lớn hơn 0
+    IdValidator.validateId(userId, "User");
+    IdValidator.validateId(campaignId, "Campaign");
+
+    // Lấy thông tin campaign
+    Event campaign = getGiveawayCampaignById(campaignId);
+
+    // Validate điều kiện tham gia
+    validateParticipationEligibility(userId, campaignId, campaign);
+
+    // Kiểm tra user đã tham gia chưa
+    if (giveawayCampaignRepository.hasUserParticipated(userId, campaignId)) {
+      throw new BadRequestException("Bạn đã tham gia campaign này");
     }
 
-    @Override
-    public Event validateAndUpdateGiveawayCampaign(Event campaign) {
-        // Xác thực dữ liệu
-        validateCampaignDates(campaign);
-        validateCampaignData(campaign);
-
-        // Đảm bảo type vẫn là GIVEAWAY
-        campaign.setType(EventType.GIVEAWAY.getValue());
-
-        return campaign;
+    // Lấy danh sách toys có sẵn
+    List<Toy> availableToys = getAvailableToysInCampaign(campaignId);
+    if (availableToys.isEmpty()) {
+      throw new BadRequestException("Không còn đồ chơi trong chiến dịch");
     }
 
-    @Override
-    public void deleteGiveawayCampaign(Long id) {
-        // Kiểm tra ID phải lớn hơn 0
-        IdValidator.validateId(id, "Campaign");
+    // Chọn toy dựa trên preferences
+    Toy selectedToy = selectToyWithPreferences(campaignId, userId, preferences);
 
-        Event campaign = getGiveawayCampaignById(id);
+    // Tạo bản ghi tham gia
+    ToyParticipation participation = new ToyParticipation();
+    participation.setUserId(userId);
+    participation.setCampaignId(campaignId);
+    participation.setToyId(selectedToy.getId());
+    participation.setStatus(ToyStatus.GIVEAWAY_CLAIMED.getValue());
+    return giveawayCampaignRepository.saveParticipation(participation);
+  }
 
-        // Kiểm tra campaign có thể xóa không
-        if (campaign.getStatus().equals(EventStatus.ONGOING.getValue())) {
-            throw new BadRequestException("Không thể xóa chiến dịch đang diễn ra");
-        }
+  private ToyParticipation participateInGiveawayCampaign(Long userId, Long campaignId) {
+    // Kiểm tra ID phải lớn hơn 0
+    IdValidator.validateId(userId, "User");
+    IdValidator.validateId(campaignId, "Campaign");
 
-        // Soft delete: Chỉ đánh dấu là đã xóa
-        campaign.setStatus(EventStatus.DELETED.getValue());
-        eventRepository.save(campaign);
+    // Lấy thông tin campaign
+    Event campaign = getGiveawayCampaignById(campaignId);
 
-        // Cập nhật trạng thái toys về AVAILABLE
-        toyRepository.updateStatusByCampaignId(id,
-                ToyStatus.GIVEAWAY_AVAILABLE.getValue(),
-                ToyStatus.AVAILABLE.getValue());
+    // Validate điều kiện tham gia
+    validateParticipationEligibility(userId, campaignId, campaign);
+
+    // Kiểm tra user đã tham gia chưa
+    if (giveawayCampaignRepository.hasUserParticipated(userId, campaignId)) {
+      throw new BadRequestException("Bạn đã tham gia campaign này");
     }
 
-    @Override
-    public int addToysToGiveawayCampaign(Long campaignId, List<Long> toyIds) {
-        // Validate inputs
-        IdValidator.validateId(campaignId, "Campaign");
-        if (toyIds == null || toyIds.isEmpty()) {
-            throw new BadRequestException("Danh sách toys không được để trống");
-        }
-
-        // Validate campaign exists and is giveaway type
-        Event campaign = getGiveawayCampaignById(campaignId);
-
-        // Validate campaign status
-        if (campaign.getStatus().equals(EventStatus.FINISHED.getValue()) ||
-                campaign.getStatus().equals(EventStatus.DELETED.getValue())) {
-            throw new BadRequestException("Không thể thêm toys vào chiến dịch đã kết thúc hoặc đã xóa");
-        }
-
-        // Validate all toys exist and are available
-        int availableToys = 0;
-
-        for (Long toyId : toyIds) {
-            IdValidator.validateId(toyId, "Toy");
-            Toy toy = toyRepository.findOneById(toyId)
-                    .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy đồ chơi với ID: " + toyId));
-
-            if (!toy.getStatus().equals(ToyStatus.AVAILABLE.getValue())) {
-                throw new BadRequestException("Đồ chơi ID " + toyId + " không khả dụng để thêm vào chiến dịch");
-            }
-            availableToys++;
-        }
-
-        if (availableToys > 0) {
-            campaign.setAvailableToys(availableToys);
-            eventRepository.save(campaign);
-        }
-
-        // Batch update toys
-        return toyRepository.addToysToCampaign(toyIds, campaignId, ToyStatus.GIVEAWAY_AVAILABLE.getValue());
+    // Lấy danh sách toys có sẵn
+    List<Toy> availableToys = getAvailableToysInCampaign(campaignId);
+    if (availableToys.isEmpty()) {
+      throw new BadRequestException("Không còn toys trong campaign");
     }
 
-    @Override
-    public List<Toy> getAvailableToysInCampaign(Long campaignId) {
-        IdValidator.validateId(campaignId, "Campaign");
-        return toyRepository.findByCampaignIdAndStatus(campaignId, ToyStatus.GIVEAWAY_AVAILABLE.getValue());
+    // Chọn ngẫu nhiên một toy
+    Toy selectedToy = selectRandomToy(campaignId);
+
+    // Tạo bản ghi tham gia
+    ToyParticipation participation = new ToyParticipation();
+    participation.setUserId(userId);
+    participation.setCampaignId(campaignId);
+    participation.setToyId(selectedToy.getId());
+    participation.setStatus(ToyStatus.GIVEAWAY_CLAIMED.getValue());
+    return giveawayCampaignRepository.saveParticipation(participation);
+  }
+
+  @Override
+  public Toy selectRandomToy(Long campaignId) {
+    return toyRepository.findRandomAvailableToyInCampaign(campaignId);
+  }
+
+  @Override
+  public Toy selectToyWithPreferences(Long campaignId, Long userId, String preferences) {
+    // For now, fallback to random selection
+    return selectRandomToy(campaignId);
+  }
+
+  @Override
+  public void validateParticipationEligibility(Long userId, Long campaignId, Event campaign) {
+    // Kiểm tra trạng thái campaign
+    if (campaign.getStatus() != EventStatus.ONGOING.getValue()) {
+      throw new BadRequestException("Campaign chưa bắt đầu hoặc đã kết thúc");
     }
 
-    @Override
-
-    public long countAvailableToysInCampaign(Long campaignId) {
-        // IdValidator.validateId(campaignId, "Campaign");
-        // return toyRepository.countByCampaignIdAndStatus(campaignId,
-        // ToyStatus.GIVEAWAY_AVAILABLE.getValue());
-
-        return 0;
+    // Kiểm tra user đã tham gia chưa
+    if (giveawayCampaignRepository.hasUserParticipated(userId, campaignId)) {
+      throw new BadRequestException("Bạn đã tham gia campaign này");
     }
 
-    @Override
-    public long countTotalToysInCampaign(Long campaignId) {
-        IdValidator.validateId(campaignId, "Campaign");
-        long available = toyRepository.countByCampaignIdAndStatus(campaignId, ToyStatus.GIVEAWAY_AVAILABLE.getValue());
-        long claimed = toyRepository.countByCampaignIdAndStatus(campaignId, ToyStatus.GIVEAWAY_CLAIMED.getValue());
-        return available + claimed;
+    // Kiểm tra còn toys không
+    if (campaign.getAvailableToys() <= 0) {
+      throw new BadRequestException("Không còn toys trong campaign");
+    }
+  }
+
+  @Override
+  public List<Toy> getToysInCampaign(Specification<Toy> specification) {
+    return toyRepository.findAll(specification);
+  }
+
+  @Override
+  public List<Toy> getToysInCampaign(Specification<Toy> specification, Pageable pageable) {
+    return toyRepository.findAll(specification, pageable);
+  }
+
+  private void validateCampaignDates(Event campaign) {
+    LocalDateTime now = LocalDateTime.now();
+    if (campaign.getStartDate() == null || campaign.getEndDate() == null) {
+      throw new BadRequestException("Ngày bắt đầu và kết thúc không được để trống");
+    }
+    if (campaign.getStartDate().isBefore(now)) {
+      throw new BadRequestException("Ngày bắt đầu phải sau thời điểm hiện tại");
+    }
+    if (campaign.getEndDate().isBefore(campaign.getStartDate())) {
+      throw new BadRequestException("Ngày kết thúc phải sau ngày bắt đầu");
+    }
+  }
+
+  private void validateCampaignData(Event campaign) {
+    if (campaign.getName() == null || campaign.getName().trim().isEmpty()) {
+      throw new BadRequestException("Tên campaign không được để trống");
+    }
+    if (campaign.getDescription() == null || campaign.getDescription().trim().isEmpty()) {
+      throw new BadRequestException("Mô tả campaign không được để trống");
+    }
+    if (campaign.getTheme() == null || campaign.getTheme().trim().isEmpty()) {
+      throw new BadRequestException("Chủ đề campaign không được để trống");
+    }
+    if (campaign.getRules() == null || campaign.getRules().trim().isEmpty()) {
+      throw new BadRequestException("Quy tắc campaign không được để trống");
+    }
+    if (campaign.getTotalToys() == null || campaign.getTotalToys() <= 0) {
+      throw new BadRequestException("Tổng số toys phải lớn hơn 0");
+    }
+  }
+
+  @Override
+  public long countAvailableToysInCampaign(Long campaignId) {
+    IdValidator.validateId(campaignId, "Campaign");
+    return toyRepository.countByCampaignIdAndStatus(campaignId,
+        ToyStatus.GIVEAWAY_AVAILABLE.getValue());
+  }
+
+  @Override
+  public long countTotalToysInCampaign(Long campaignId) {
+    IdValidator.validateId(campaignId, "Campaign");
+    long available = toyRepository.countByCampaignIdAndStatus(campaignId,
+        ToyStatus.GIVEAWAY_AVAILABLE.getValue());
+    long claimed = toyRepository.countByCampaignIdAndStatus(campaignId,
+        ToyStatus.GIVEAWAY_CLAIMED.getValue());
+    return available + claimed;
+  }
+
+  @Override
+  public int canParticipate(Long userId, Long campaignId) {
+    IdValidator.validateId(userId, "User");
+    IdValidator.validateId(campaignId, "Campaign");
+
+    // Check if user already participated using Redis cache
+    if (giveawayCampaignRepository.hasUserParticipated(userId, campaignId)) {
+      return 0;
     }
 
-    @Override
-    public int canParticipate(Long userId, Long campaignId) {
-        IdValidator.validateId(userId, "User");
-        IdValidator.validateId(campaignId, "Campaign");
-
-        // Check if user already participated
-        if (hasUserParticipated(userId, campaignId) == 1) {
-            return 0;
-        }
-
-        // Check if campaign is active
-        Event campaign = getGiveawayCampaignById(campaignId);
-        if (isCampaignActive(campaign) == 0) {
-            return 0;
-        }
-
-        // Check if there are available toys
-        return campaign.getAvailableToys() > 0 ? 1 : 0;
+    // Check if campaign is active
+    Event campaign = getGiveawayCampaignById(campaignId);
+    if (isCampaignActive(campaign) == 0) {
+      return 0;
     }
 
-    @Override
-    public int hasUserParticipated(Long userId, Long campaignId) {
-        IdValidator.validateId(userId, "User");
-        IdValidator.validateId(campaignId, "Campaign");
-        return toyParticipationRepository.existsByUserIdAndCampaignId(userId, campaignId) ? 1 : 0;
+    // Check if there are available toys
+    return campaign.getAvailableToys() > 0 ? 1 : 0;
+  }
+
+  @Override
+  public int hasUserParticipated(Long userId, Long campaignId) {
+    IdValidator.validateId(userId, "User");
+    IdValidator.validateId(campaignId, "Campaign");
+    return toyParticipationRepository.existsByUserIdAndCampaignId(userId, campaignId) ? 1 : 0;
+  }
+
+  @Override
+  public List<ToyParticipation> getUserParticipations(Long userId, int page, int limit) {
+    IdValidator.validateId(userId, "User");
+    return toyParticipationRepository.findByUserId(userId, page, limit);
+  }
+
+  @Override
+  public long countUserParticipations(Long userId) {
+    IdValidator.validateId(userId, "User");
+    return toyParticipationRepository.countByUserId(userId);
+  }
+
+  @Override
+  public List<ToyParticipation> getCampaignParticipations(Long campaignId) {
+    IdValidator.validateId(campaignId, "Campaign");
+    return toyParticipationRepository.findByCampaignId(campaignId);
+  }
+
+  @Override
+  public long countCampaignParticipations(Long campaignId) {
+    IdValidator.validateId(campaignId, "Campaign");
+    return toyParticipationRepository.countByCampaignId(campaignId);
+  }
+
+  @Override
+  public void updateCampaignStatus(Long campaignId, Integer status) {
+    IdValidator.validateId(campaignId, "Campaign");
+
+    Event campaign = getGiveawayCampaignById(campaignId);
+    campaign.setStatus(status);
+    eventRepository.save(campaign);
+  }
+
+  @Override
+  public int isCampaignActive(Event campaign) {
+    if (campaign == null) {
+      return 0;
     }
 
-    @Override
-    public List<ToyParticipation> getUserParticipations(Long userId, int page, int limit) {
-        IdValidator.validateId(userId, "User");
-        return toyParticipationRepository.findByUserId(userId, page, limit);
+    // Check status
+    if (!campaign.getStatus().equals(EventStatus.ONGOING.getValue())) {
+      return 0;
     }
 
-    @Override
-    public long countUserParticipations(Long userId) {
-        IdValidator.validateId(userId, "User");
-        return toyParticipationRepository.countByUserId(userId);
+    // Check dates
+    LocalDateTime now = LocalDateTime.now();
+    if (!now.isBefore(campaign.getStartDate()) && !now.isAfter(campaign.getEndDate())) {
+      return 1;
     }
 
-    @Override
-    public List<ToyParticipation> getCampaignParticipations(Long campaignId) {
-        IdValidator.validateId(campaignId, "Campaign");
-        return toyParticipationRepository.findByCampaignId(campaignId);
+    return 0;
+  }
+
+  @Override
+  public int isCampaignExpired(Event campaign) {
+    if (campaign == null) {
+      return 0;
     }
 
-    @Override
-    public long countCampaignParticipations(Long campaignId) {
-        IdValidator.validateId(campaignId, "Campaign");
-        return toyParticipationRepository.countByCampaignId(campaignId);
+    // Check status
+    if (campaign.getStatus().equals(EventStatus.FINISHED.getValue())) {
+      return 1;
     }
 
-    @Override
-    public void updateCampaignStatus(Long campaignId, Integer status) {
-        IdValidator.validateId(campaignId, "Campaign");
-
-        Event campaign = getGiveawayCampaignById(campaignId);
-        campaign.setStatus(status);
-        eventRepository.save(campaign);
+    // Check dates
+    LocalDateTime now = LocalDateTime.now();
+    if (now.isAfter(campaign.getEndDate())) {
+      return 1;
     }
 
-    @Override
-    public int isCampaignActive(Event campaign) {
-        if (campaign == null) {
-            return 0;
-        }
-
-        // Check status
-        if (!campaign.getStatus().equals(EventStatus.ONGOING.getValue())) {
-            return 0;
-        }
-
-        // Check dates
-        LocalDateTime now = LocalDateTime.now();
-        if (!now.isBefore(campaign.getStartDate()) && !now.isAfter(campaign.getEndDate())) {
-            return 1;
-        }
-
-        return 0;
-    }
-
-    @Override
-    public int isCampaignExpired(Event campaign) {
-        if (campaign == null) {
-            return 0;
-        }
-
-        LocalDateTime now = LocalDateTime.now();
-        if (now.isAfter(campaign.getEndDate())) {
-            return 1;
-        }
-
-        return 0;
-    }
-
-    /**
-     * Xác thực ngày bắt đầu và kết thúc của campaign.
-     */
-    private void validateCampaignDates(Event campaign) {
-        if (campaign.getStartDate() != null && campaign.getEndDate() != null) {
-            if (campaign.getEndDate().isBefore(campaign.getStartDate())) {
-                throw new BadRequestException("Ngày kết thúc không thể trước ngày bắt đầu");
-            }
-        }
-    }
-
-    /**
-     * Xác thực dữ liệu campaign.
-     */
-    private void validateCampaignData(Event campaign) {
-        if (campaign.getName() == null || campaign.getName().trim().isEmpty()) {
-            throw new BadRequestException("Tên chiến dịch không được để trống");
-        }
-    }
+    return 0;
+  }
 }

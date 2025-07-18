@@ -33,3 +33,4 @@ build/
 .vscode/
 .cursor/rules/cursor-rule.mdc
 qqq.md
+toy-starter/src/main/resources/application.yml

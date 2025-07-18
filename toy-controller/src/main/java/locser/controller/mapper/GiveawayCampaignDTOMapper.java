@@ -164,8 +164,6 @@ public class GiveawayCampaignDTOMapper {
                 .toyId(dto.getToyId())
                 .campaignId(dto.getCampaignId())
                 .campaignName(dto.getCampaignName())
-                // .toy(dto.getToy() != null ? ToyDTOMapper.toToyResponseDTO(dto.getToy()) :
-                // null) // TODO: Implement ToyDTOMapper
                 .participationDate(dto.getParticipationDate().format(DATE_TIME_FORMATTER))
                 .status(dto.getStatus())
                 .statusText(getParticipationStatusText(dto.getStatus()))

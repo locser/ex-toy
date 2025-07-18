@@ -13,14 +13,18 @@ import jakarta.persistence.Column;
 import jakarta.persistence.EntityListeners;
 import jakarta.persistence.MappedSuperclass;
 import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 
 @MappedSuperclass
 @Data
+@Getter
+@Setter
 @EntityListeners(AuditingEntityListener.class)
 @JsonIgnoreProperties(value = { "createdAt", "updatedAt" }, allowGetters = true)
 public abstract class DateAudit implements Serializable {
 
-	private static final long serialVersionUID = 1L;
+	// private static final long serialVersionUID = 1L;
 
 	@CreatedDate
 	@Column(name = "created_at", nullable = false, updatable = false)

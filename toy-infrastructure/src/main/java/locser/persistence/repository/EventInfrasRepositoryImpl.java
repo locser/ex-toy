@@ -25,6 +25,7 @@ public class EventInfrasRepositoryImpl implements EventRepository {
 
   @Override
   public Optional<Event> findOneById(Long id) {
+    System.out.println("GET EVENT FROM DATABASE");
     return this.eventJPAMapper.findOneById(id);
   }
 
@@ -35,27 +36,32 @@ public class EventInfrasRepositoryImpl implements EventRepository {
 
   @Override
   public Event findById(Long id) {
+    System.out.println("GET EVENT FROM DATABASE");
     return eventJPAMapper.findById(id).orElse(null);
   }
 
   @Override
   public List<Event> findByStatus(int status) {
+    System.out.println("GET EVENT FROM DATABASE");
     return eventJPAMapper.findByStatus(status);
   }
 
   @Override
   public List<Event> findByStatus(int status, String sortBy, String sortDirection) {
+    System.out.println("GET EVENT FROM DATABASE");
     Sort sort = createSort(sortBy, sortDirection);
     return eventJPAMapper.findByStatus(status, sort);
   }
 
   @Override
   public List<Event> findAll() {
+    System.out.println("GET EVENT FROM DATABASE");
     return eventJPAMapper.findAll();
   }
 
   @Override
   public List<Event> findAll(String sortBy, String sortDirection) {
+    System.out.println("GET EVENT FROM DATABASE");
     Sort sort = createSort(sortBy, sortDirection);
     return eventJPAMapper.findAll(sort);
   }
@@ -63,6 +69,7 @@ public class EventInfrasRepositoryImpl implements EventRepository {
   @Override
   public List<Event> findWithPagination(int page, int size, int status, String sortBy,
       String sortDirection) {
+    System.out.println("GET EVENT FROM DATABASE");
     Sort sort = createSort(sortBy, sortDirection);
     Pageable pageable = PageRequest.of(page, size, sort);
 
@@ -79,6 +86,7 @@ public class EventInfrasRepositoryImpl implements EventRepository {
 
   @Override
   public long count(int status) {
+    System.out.println("GET EVENT FROM DATABASE");
     if (status != EventStatus.ALL.getValue()) {
       return eventJPAMapper.countByStatus(status);
     } else {
@@ -88,12 +96,14 @@ public class EventInfrasRepositoryImpl implements EventRepository {
 
   @Override
   public List<Event> findByType(Integer type) {
+    System.out.println("GET EVENT FROM DATABASE");
     return List.of();
   }
 
   @Override
   public List<Event> findByTypeWithPagination(Integer type, int page, int size, Integer status,
       String sortBy, String sortDirection) {
+    System.out.println("GET EVENT FROM DATABASE");
     return List.of();
   }
 
@@ -105,12 +115,13 @@ public class EventInfrasRepositoryImpl implements EventRepository {
 
   @Override
   public long countByType(Integer type, Integer status) {
+    System.out.println("GET EVENT FROM DATABASE");
     return 0;
   }
 
   @Override
-  public int decrementAvailableToys(Long campaignId) {
-    return eventJPAMapper.decrementAvailableToys(campaignId);
+  public void decrementAvailableToys(Long campaignId, int count) {
+    eventJPAMapper.decrementAvailableToys(campaignId, count);
   }
 
   /**

@@ -2,13 +2,11 @@ package locser.infrastructure.repository;
 
 import java.util.HashSet;
 import java.util.List;
-import java.util.Optional;
 import java.util.Set;
 
 import org.springframework.stereotype.Repository;
 
 import locser.infrastructure.cache.RedisGiveawayCampaignCache;
-import locser.toy.domain.exception.BadRequestException;
 import locser.toy.domain.model.entity.Event;
 import locser.toy.domain.model.entity.Toy;
 import locser.toy.domain.model.entity.ToyParticipation;
@@ -28,96 +26,113 @@ public class GiveawayCampaignRepositoryImpl implements GiveawayCampaignRepositor
     private final RedisGiveawayCampaignCache redisCache;
 
     @Override
-    public Optional<Event> findById(Long id) {
+    public Event findById(Long id) {
         // Try Redis first
-        Object cachedCampaign = redisCache.getCachedCampaign(id);
+        Event cachedCampaign = redisCache.getCachedCampaign(id);
         if (cachedCampaign != null) {
-            return Optional.of((Event) cachedCampaign);
+            return cachedCampaign;
         }
 
         // If not in Redis, get from database
-        Optional<Event> campaign = eventRepository.findOneById(id);
-        campaign.ifPresent(c -> redisCache.cacheCampaign(id, c));
+        Event campaign = eventRepository.findOneById(id).orElse(null);
+
+        redisCache.cacheCampaign(id, campaign);
         return campaign;
     }
 
     @Override
     public Event save(Event campaign) {
         Event savedCampaign = eventRepository.save(campaign);
-        redisCache.cacheCampaign(campaign.getId(), savedCampaign);
+        redisCache.cacheCampaign(savedCampaign.getId(), savedCampaign);
         return savedCampaign;
     }
 
     @Override
-    public List<Toy> findAvailableToys(Long campaignId) {
+    public Toy findAvailableToy(Long campaignId) {
         // Try Redis first
         long availableCount = redisCache.getAvailableToysCount(campaignId);
         if (availableCount > 0) {
-            // Get random toy from Redis using atomic operation
-            Optional<Long> randomToyId = redisCache.getRandomAvailableToy(campaignId);
-            if (randomToyId.isPresent()) {
-                return toyRepository.findByIdIn(List.of(randomToyId.get()));
+            Long randomToyId = redisCache.getRandomAvailableToy(campaignId);
+            if (randomToyId != null) {
+                Toy toy = toyRepository.findOneById(randomToyId).orElse(null);
+                if (toy != null && toy.getStatus().equals(ToyStatus.GIVEAWAY_AVAILABLE.getValue())) {
+                    return toy;
+                }
             }
         }
 
-        // If not in Redis or no toys available, get from database
+        // Get from database and refresh cache
         List<Toy> toys = toyRepository.findByCampaignIdAndStatus(
                 campaignId,
                 ToyStatus.GIVEAWAY_AVAILABLE.getValue());
 
-        // Cache available toys
+        if (toys.isEmpty()) {
+            return null;
+        }
+
+        // Update cache with fresh data
         Set<Long> toyIds = new HashSet<>(toys.stream().map(Toy::getId).toList());
         redisCache.cacheAvailableToys(campaignId, toyIds);
-        return toys;
+
+        // Get random toy
+        Long randomToyId = redisCache.getRandomAvailableToy(campaignId);
+        return randomToyId != null ? toyRepository.findOneById(randomToyId).orElse(null) : null;
     }
 
+    // TODO: Implement this method
     @Override
     public boolean hasUserParticipated(Long userId, Long campaignId) {
-        // Try Redis first
-        if (redisCache.hasUserParticipated(userId, campaignId)) {
-            return true;
-        }
 
-        // If not in Redis, check database
-        boolean participated = toyParticipationRepository.existsByUserIdAndCampaignId(userId, campaignId);
-        if (participated) {
-            redisCache.markUserParticipated(userId, campaignId);
-        }
-        return participated;
+        return false;
+        // Try Redis first
+        // if (redisCache.hasUserParticipated(userId, campaignId)) {
+        // return true;
+        // }
+
+        // // If not in Redis, check database
+        // boolean participated =
+        // toyParticipationRepository.existsByUserIdAndCampaignId(userId, campaignId);
+        // if (participated) {
+        // redisCache.markUserParticipated(userId, campaignId);
+        // }
+        // return participated;
     }
 
     @Override
     public ToyParticipation saveParticipation(ToyParticipation participation) {
         // Save participation record
         ToyParticipation savedParticipation = toyParticipationRepository.save(participation);
+        // Mark user as participated in Redis
+        redisCache.markUserParticipated(participation.getUserId(), participation.getCampaignId());
 
         // Update toy status
-        Toy toy = toyRepository.findOneById(participation.getToyId())
-                .orElseThrow(() -> new BadRequestException("Toy not found"));
-        toy.setStatus(ToyStatus.GIVEAWAY_CLAIMED.getValue());
-        toyRepository.save(toy);
+
+        toyRepository.updateStatus(participation.getToyId(), ToyStatus.GIVEAWAY_CLAIMED.getValue());
 
         // Update available toys count
         updateAvailableToys(participation.getCampaignId(), -1);
-
-        // Mark user as participated in Redis
-        redisCache.markUserParticipated(participation.getUserId(), participation.getCampaignId());
 
         return savedParticipation;
     }
 
     @Override
     public void updateAvailableToys(Long campaignId, int count) {
-        Optional<Event> campaignOpt = findById(campaignId);
-        if (campaignOpt.isPresent()) {
-            Event campaign = campaignOpt.get();
-            campaign.setAvailableToys(campaign.getAvailableToys() + count);
-            save(campaign);
-        }
+        decrementAvailableToys(campaignId, count);
+        // Event campaign = findById(campaignId);
+        // if (campaign != null) {
+        // campaign.setAvailableToys(campaign.getAvailableToys() + count);
+        // save(campaign);
+        // }
     }
 
     @Override
     public void markUserParticipated(Long userId, Long campaignId) {
         redisCache.markUserParticipated(userId, campaignId);
     }
+
+    @Override
+    public void decrementAvailableToys(Long campaignId, int count) {
+        eventRepository.decrementAvailableToys(campaignId, count);
+    }
+
 }

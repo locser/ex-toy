@@ -89,5 +89,5 @@ public interface EventRepository {
    * @param campaignId The campaign ID
    * @return Number of rows updated (1 if successful, 0 if no toys available)
    */
-  int decrementAvailableToys(Long campaignId);
+  void decrementAvailableToys(Long campaignId, int count);
 }

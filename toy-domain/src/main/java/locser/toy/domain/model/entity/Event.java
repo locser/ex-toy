@@ -1,6 +1,10 @@
 package locser.toy.domain.model.entity;
 
+import java.time.Instant;
 import java.time.LocalDateTime;
+
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.annotation.LastModifiedDate;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -8,7 +12,6 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
-import jakarta.persistence.Version;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -20,7 +23,7 @@ import lombok.Setter;
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
-public class Event extends DateAudit {
+public class Event {
 
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -65,6 +68,11 @@ public class Event extends DateAudit {
   @Column(name = "available_toys", nullable = false, columnDefinition = "INT DEFAULT 0")
   private Integer availableToys = 0;
 
-  @Version
-  private Long version = 0L;
+  @CreatedDate
+  @Column(name = "created_at", nullable = false, updatable = false)
+  private Instant createdAt = Instant.now();
+
+  @LastModifiedDate
+  @Column(name = "updated_at", nullable = false)
+  private Instant updatedAt = Instant.now();
 }

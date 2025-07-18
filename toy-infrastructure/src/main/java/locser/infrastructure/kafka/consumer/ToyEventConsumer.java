@@ -5,7 +5,6 @@ import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Component;
 
 import locser.infrastructure.kafka.event.ToyEvent;
-import locser.toy.domain.service.ToyDomainService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -19,7 +18,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class ToyEventConsumer {
 
-    private final ToyDomainService toyDomainService;
+    // private final ToyDomainService toyDomainService;
 
     /**
      * Listens for toy events on the toy-events topic.

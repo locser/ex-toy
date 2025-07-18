@@ -1,18 +1,17 @@
 package locser.toy.domain.repository;
 
-import java.util.List;
-import java.util.Optional;
-
 import locser.toy.domain.model.entity.Event;
 import locser.toy.domain.model.entity.Toy;
 import locser.toy.domain.model.entity.ToyParticipation;
 
 public interface GiveawayCampaignRepository {
-    Optional<Event> findById(Long id);
+    Event findById(Long id);
 
     Event save(Event campaign);
 
-    List<Toy> findAvailableToys(Long campaignId);
+    // List<Toy> findAvailableToys(Long campaignId);
+
+    Toy findAvailableToy(Long campaignId);
 
     boolean hasUserParticipated(Long userId, Long campaignId);
 
@@ -21,4 +20,6 @@ public interface GiveawayCampaignRepository {
     void updateAvailableToys(Long campaignId, int count);
 
     void markUserParticipated(Long userId, Long campaignId);
+
+    void decrementAvailableToys(Long campaignId, int count);
 }

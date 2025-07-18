@@ -191,4 +191,5 @@ public interface ToyRepository {
    */
   Toy findRandomAvailableToyInCampaign(Long campaignId);
 
+  void updateStatus(Long toyId, Integer status);
 }

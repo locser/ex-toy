@@ -273,4 +273,9 @@ public class ToyInfrasRepositoryImpl implements ToyRepository {
         ToyStatus.GIVEAWAY_AVAILABLE.getValue());
   }
 
+  @Override
+  public void updateStatus(Long toyId, Integer status) {
+    toyJPAMapper.updateStatus(toyId, status);
+  }
+
 }

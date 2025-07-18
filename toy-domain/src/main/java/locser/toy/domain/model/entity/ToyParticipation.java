@@ -38,7 +38,7 @@ public class ToyParticipation {
     @Column(name = "campaign_id", nullable = false)
     private Long campaignId;
 
-    @Column(name = "participation_date", nullable = false)
+    @Column(name = "participation_date", nullable = false, columnDefinition = "DATETIME DEFAULT CURRENT_TIMESTAMP")
     private LocalDateTime participationDate;
 
     @Column(name = "status", nullable = false, columnDefinition = "INT DEFAULT 1")

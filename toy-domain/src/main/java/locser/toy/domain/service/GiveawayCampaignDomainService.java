@@ -57,13 +57,15 @@ public interface GiveawayCampaignDomainService {
      */
     int addToysToGiveawayCampaign(Long campaignId, List<Long> toyIds);
 
-    /**
-     * Lấy danh sách toys có sẵn trong giveaway campaign.
-     *
-     * @param campaignId ID của campaign
-     * @return Danh sách toys có sẵn
-     */
-    List<Toy> getAvailableToysInCampaign(Long campaignId);
+    // /**
+    // * Lấy danh sách toys có sẵn trong giveaway campaign.
+    // *
+    // * @param campaignId ID của campaign
+    // * @return Danh sách toys có sẵn
+    // */
+    // List<Toy> getAvailableToysInCampaign(Event event);
+
+    Toy getAvailableToyInCampaign(Event event);
 
     /**
      * Đếm số lượng toys có sẵn trong campaign.

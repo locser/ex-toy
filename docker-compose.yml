@@ -1,0 +1,84 @@
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: x-toy-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: java_demo
+      MYSQL_ROOT_PASSWORD: password
+      MYSQL_USER: appuser
+      MYSQL_PASSWORD: password
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./docker/mysql/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    networks:
+      - x-toy-network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      timeout: 20s
+      retries: 10
+
+  redis:
+    image: redis:7.2-alpine
+    container_name: x-toy-redis
+    restart: unless-stopped
+    command: redis-server --requirepass GNwHez7OT53ftK5Ui3IOOlg1jUMwKT5
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - x-toy-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "--raw", "incr", "ping"]
+      timeout: 3s
+      retries: 5
+
+  x-toy-app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: x-toy-app
+    restart: unless-stopped
+    ports:
+      - "1122:1122"
+    environment:
+      DB_URL: jdbc:mysql://mysql:3306/java_demo?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+      DB_USERNAME: root
+      DB_PASSWORD: password
+      REDIS_HOST: redis
+      REDIS_PASSWORD: GNwHez7OT53ftK5Ui3IOOlg1jUMwKT5
+      JAVA_OPTS: -server -Xms512m -Xmx1536m -XX:+UseG1GC -XX:+UseContainerSupport -XX:MaxGCPauseMillis=200 -XX:+ExitOnOutOfMemoryError -Dspring.profiles.active=docker
+      SPRING_PROFILES_ACTIVE: docker
+    volumes:
+      - app_logs:/app/logs
+    networks:
+      - x-toy-network
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:1122/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+    deploy:
+      resources:
+        limits:
+          memory: 2G
+        reservations:
+          memory: 1G
+
+volumes:
+  mysql_data:
+  redis_data:
+  app_logs:
+
+networks:
+  x-toy-network:
+    driver: bridge

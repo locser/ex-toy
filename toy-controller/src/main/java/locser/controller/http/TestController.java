@@ -8,6 +8,8 @@ public class TestController {
 
   @GetMapping("/api/test")
   public String test() {
+    System.out.println("Test successful!");
     return "Test successful!";
   }
+
 }

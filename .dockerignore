@@ -1,0 +1,46 @@
+# Ignore files for Docker build
+.git
+.gitignore
+README.md
+*.md
+.env
+.env.*
+
+# Maven build artifacts
+target/
+*/target/
+!toy-starter/target/*.jar
+
+# IDE files
+.idea/
+.vscode/
+*.iml
+*.ipr
+*.iws
+.project
+.classpath
+.settings/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Log files
+*.log
+logs/
+
+# Test files
+**/src/test/
+test-results/
+coverage/
+
+# Docker files (to avoid recursion)
+Dockerfile*
+docker-compose*.yml
+.dockerignore
+
+# Other unnecessary files
+*.tmp
+*.temp
+.cache/
+node_modules/

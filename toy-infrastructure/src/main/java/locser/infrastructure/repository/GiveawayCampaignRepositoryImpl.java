@@ -37,6 +37,7 @@ public class GiveawayCampaignRepositoryImpl implements GiveawayCampaignRepositor
         Event campaign = eventRepository.findOneById(id).orElse(null);
 
         redisCache.cacheCampaign(id, campaign);
+        System.out.println("GiveawayCampaignRepositoryImpl findById cachedCampaign: " + cachedCampaign);
         return campaign;
     }
 

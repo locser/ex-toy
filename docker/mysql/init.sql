@@ -313,6 +313,6 @@ SELECT COUNT(*) as total_inserted FROM toys;
 SELECT 'Insertion completed successfully!' as status;
 
 
-UPDATE java_demo.toys
-SET status=7, campaign_id = 12
-WHERE id > 0 and id < 100000;
+-- UPDATE java_demo.toys
+-- SET status=7, campaign_id = 12
+-- WHERE id > 0 and id < 1000000;

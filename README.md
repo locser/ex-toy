@@ -29,20 +29,24 @@ Repository Implementation (Adapter) --------------+
 ### Các lớp chính
 
 #### 1. Domain Layer (Lớp miền - trung tâm)
+
 - **Domain Model**: Các entity, value object, domain events
 - **Domain Service**: Chứa logic nghiệp vụ cốt lõi
 - **Repository Interface**: Định nghĩa các cổng (port) để truy cập dữ liệu
 
 #### 2. Application Layer (Lớp ứng dụng)
+
 - **Application Service**: Điều phối các use case, gọi domain service
 - **DTOs**: Đối tượng truyền dữ liệu giữa các lớp
 - **Mappers**: Chuyển đổi giữa DTO và Domain Model
 
 #### 3. Infrastructure Layer (Lớp hạ tầng)
+
 - **Repository Implementations**: Triển khai repository interface
 - **JPA Mappers**: Tương tác với cơ sở dữ liệu
 
 #### 4. Controller Layer (Lớp điều khiển)
+
 - **Controllers**: Xử lý HTTP request/response
 - **Response Models**: Định dạng phản hồi API
 
@@ -65,11 +69,13 @@ toy-domain/src/main/java/locser/toy/domain/service/impl/EventDomainServiceImpl.j
 ```
 
 Đây là nơi chứa logic nghiệp vụ cốt lõi:
+
 - Xác thực dữ liệu theo quy tắc nghiệp vụ
 - Thực hiện các thao tác nghiệp vụ
 - Đảm bảo tính toàn vẹn của dữ liệu
 
 Ví dụ:
+
 ```java
 // Xác thực ngày bắt đầu và kết thúc của sự kiện
 private void validateEventDates(Event event) {
@@ -88,6 +94,7 @@ toy-application/src/main/java/locser/toy/application/service/EventApplicationSer
 ```
 
 Điều phối các use case:
+
 - Chuyển đổi giữa DTO và Domain Model
 - Gọi Domain Service để xử lý logic nghiệp vụ
 - Quản lý transaction
@@ -99,6 +106,7 @@ toy-domain/src/main/java/locser/toy/domain/model/entity/Event.java
 ```
 
 Chứa các phương thức lifecycle và ràng buộc:
+
 - `@PrePersist`: Logic trước khi lưu
 - `@PreUpdate`: Logic trước khi cập nhật
 
@@ -106,19 +114,20 @@ Chứa các phương thức lifecycle và ràng buộc:
 
 ### Event API
 
-| Method | Endpoint | Mô tả |
-|--------|----------|-------|
-| POST | /api/v1/admin/campaigns | Tạo mới sự kiện |
-| GET | /api/v1/campaigns | Lấy danh sách sự kiện |
-| GET | /api/v1/campaigns/{id} | Lấy chi tiết sự kiện |
-| PUT | /api/v1/admin/campaigns/{id} | Cập nhật sự kiện |
-| DELETE | /api/v1/admin/campaigns/{id} | Xóa sự kiện |
+| Method | Endpoint                     | Mô tả                 |
+| ------ | ---------------------------- | --------------------- |
+| POST   | /api/v1/admin/campaigns      | Tạo mới sự kiện       |
+| GET    | /api/v1/campaigns            | Lấy danh sách sự kiện |
+| GET    | /api/v1/campaigns/{id}       | Lấy chi tiết sự kiện  |
+| PUT    | /api/v1/admin/campaigns/{id} | Cập nhật sự kiện      |
+| DELETE | /api/v1/admin/campaigns/{id} | Xóa sự kiện           |
 
 ## Cách tiếp cận code
 
 ### 1. Tìm hiểu Domain Model
 
 Bắt đầu với các entity trong package `toy-domain/src/main/java/locser/toy/domain/model/entity/`:
+
 - `Event.java`: Sự kiện/Chiến dịch
 - `User.java`: Người dùng
 - `Toy.java`: Đồ chơi
@@ -127,12 +136,14 @@ Bắt đầu với các entity trong package `toy-domain/src/main/java/locser/to
 ### 2. Tìm hiểu Business Logic
 
 Kiểm tra logic nghiệp vụ trong các file:
+
 - Domain Service: `toy-domain/src/main/java/locser/toy/domain/service/impl/`
 - Application Service: `toy-application/src/main/java/locser/toy/application/service/`
 
 ### 3. Tìm hiểu API
 
 Kiểm tra các controller trong package `toy-controller/src/main/java/locser/toy/controller/` hoặc `toy-starter/src/main/java/locser/`:
+
 - `EventController.java`: API quản lý sự kiện
 
 ## Ví dụ sử dụng API
@@ -198,3 +209,31 @@ DELETE /api/v1/admin/campaigns/1
 2. Cấu hình cơ sở dữ liệu trong `toy-starter/src/main/resources/application.yml`
 3. Chạy lệnh: `./mvnw spring-boot:run -pl toy-starter`
 4. Truy cập API tại: `http://localhost:8080/api/v1/campaigns`
+
+# Update test with k6
+
+- với basic-giveaway-test.js: OK
+- với stress-test-giveaway.js: OK
+
+* nếu ít hơn 5000req/s thì service đang chạy khá ổn định, nhưng khi lớn hơn, với config
+
+```yml
+spring:
+  # application
+  application:
+    name: exchange.com
+  #DBS
+  datasource:
+    hikari:
+      maximum-pool-size: 20 # Số lượng tối đa kết nối
+      minimum-idle: 5 # Số lượng kết nối tối thiểu trong pool
+```
+
+thì không thể đáp ứng query liên tục.
+
+giải pháp của tôi:
+
+- tăng số lượng kết nối tối đa
+- tách việc lưu database người dùng ra luồng mới, có thể nhận -> gửi kafka -> xử lý -> lưu database
+-      maximum-pool-size: 100 # Số lượng tối đa kết nối
+- chạy ổn với 3500 req/s

@@ -2,18 +2,16 @@ package locser.persistence.repository;
 
 import java.util.List;
 import java.util.Optional;
-
+import locser.persistence.mapper.ToyJPAMapper;
+import locser.toy.domain.model.entity.Toy;
+import locser.toy.domain.model.enums.ToyStatus;
+import locser.toy.domain.repository.ToyRepository;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Direction;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
-
-import locser.persistence.mapper.ToyJPAMapper;
-import locser.toy.domain.model.entity.Toy;
-import locser.toy.domain.model.enums.ToyStatus;
-import locser.toy.domain.repository.ToyRepository;
 
 /**
  * Implementation of ToyRepository using JPA.
@@ -30,51 +28,61 @@ public class ToyInfrasRepositoryImpl implements ToyRepository {
 
   @Override
   public Optional<Toy> findOneById(Long id) {
+    System.out.println("ToyInfrasRepositoryImpl.findOneById");
     return toyJPAMapper.findOneById(id);
   }
 
   @Override
   public Toy save(Toy toy) {
+    System.out.println("ToyInfrasRepositoryImpl.save");
     return toyJPAMapper.save(toy);
   }
 
   @Override
   public Toy findById(Long id) {
+    System.out.println("ToyInfrasRepositoryImpl.findById");
     return toyJPAMapper.findById(id).orElse(null);
   }
 
   @Override
   public List<Toy> findByUserId(Long userId) {
+    System.out.println("ToyInfrasRepositoryImpl.findByUserId");
     return toyJPAMapper.findByUserId(userId);
   }
 
   @Override
   public List<Toy> findByStatus(int status) {
+    System.out.println("ToyInfrasRepositoryImpl.findByStatus");
     return toyJPAMapper.findByStatus(status);
   }
 
   @Override
   public List<Toy> findByUserIdAndStatus(Long userId, int status) {
+    System.out.println("ToyInfrasRepositoryImpl.findByUserIdAndStatus");
     return toyJPAMapper.findByUserIdAndStatus(userId, status);
   }
 
   @Override
   public List<Toy> findByCampaignId(Long campaignId) {
+    System.out.println("ToyInfrasRepositoryImpl.findByCampaignId");
     return toyJPAMapper.findByCampaignId(campaignId);
   }
 
   @Override
   public List<Toy> findByUserIdAndCampaignId(Long userId, Long campaignId) {
+    System.out.println("ToyInfrasRepositoryImpl.findByUserIdAndCampaignId");
     return toyJPAMapper.findByUserIdAndCampaignId(userId, campaignId);
   }
 
   @Override
   public List<Toy> findAll() {
+    System.out.println("ToyInfrasRepositoryImpl.findAll");
     return toyJPAMapper.findAll();
   }
 
   @Override
   public List<Toy> findAll(String sortBy, String sortDirection) {
+    System.out.println("ToyInfrasRepositoryImpl.findAll");
     Sort sort = createSort(sortBy, sortDirection);
     return toyJPAMapper.findAll(sort);
   }
@@ -82,6 +90,7 @@ public class ToyInfrasRepositoryImpl implements ToyRepository {
   @Override
   public List<Toy> findWithPagination(int page, int size, Long userId, Integer status,
       Long campaignId, String sortBy, String sortDirection) {
+    System.out.println("ToyInfrasRepositoryImpl.findWithPagination");
     Sort sort = createSort(sortBy, sortDirection);
     Pageable pageable = PageRequest.of(page, size, sort);
 
@@ -93,6 +102,7 @@ public class ToyInfrasRepositoryImpl implements ToyRepository {
 
   @Override
   public long count(Long userId, Integer status, Long campaignId) {
+    System.out.println("ToyInfrasRepositoryImpl.count");
     // Convert special value to null for filtering
     Long effectiveUserId = convertToNullIfAllRecords(userId);
 
@@ -100,13 +110,14 @@ public class ToyInfrasRepositoryImpl implements ToyRepository {
   }
 
   /**
-   * Converts the special value ALL_RECORDS (-1) to null to indicate no filtering.
-   * Any other value is returned as is.
+   * Converts the special value ALL_RECORDS (-1) to null to indicate no filtering. Any other value
+   * is returned as is.
    *
    * @param value The value to check
    * @return null if value is ALL_RECORDS, otherwise the original value
    */
   private Long convertToNullIfAllRecords(Long value) {
+    System.out.println("ToyInfrasRepositoryImpl.convertToNullIfAllRecords");
     return (value != null && value == ALL_RECORDS) ? null : value;
   }
 
@@ -119,7 +130,9 @@ public class ToyInfrasRepositoryImpl implements ToyRepository {
    * @param pageable   Pagination information
    * @return List of filtered toys
    */
-  private List<Toy> findToysWithFilters(Long userId, Integer status, Long campaignId, Pageable pageable) {
+  private List<Toy> findToysWithFilters(Long userId, Integer status, Long campaignId,
+      Pageable pageable) {
+    System.out.println("ToyInfrasRepositoryImpl.findToysWithFilters");
     // Case 1: All filters are present
     if (allFiltersPresent(userId, status, campaignId)) {
       return toyJPAMapper.findByUserIdAndStatus(userId, status, pageable).getContent();
@@ -164,6 +177,7 @@ public class ToyInfrasRepositoryImpl implements ToyRepository {
    * @return Total count of filtered toys
    */
   private long countToysWithFilters(Long userId, Integer status, Long campaignId) {
+    System.out.println("ToyInfrasRepositoryImpl.countToysWithFilters");
     // Case 1: All filters are present
     if (allFiltersPresent(userId, status, campaignId)) {
       return toyJPAMapper.countByUserIdAndCampaignId(userId, campaignId);
@@ -208,21 +222,25 @@ public class ToyInfrasRepositoryImpl implements ToyRepository {
    * @return true if all filters are present
    */
   private boolean allFiltersPresent(Long userId, Integer status, Long campaignId) {
+    System.out.println("ToyInfrasRepositoryImpl.allFiltersPresent");
     return userId != null && status != null && campaignId != null;
   }
 
   @Override
   public List<Toy> findByCampaignIdAndStatus(Long campaignId, Integer status) {
+    System.out.println("ToyInfrasRepositoryImpl.findByCampaignIdAndStatus");
     return toyJPAMapper.findByCampaignIdAndStatus(campaignId, status);
   }
 
   @Override
   public long countByCampaignIdAndStatus(Long campaignId, Integer status) {
+    System.out.println("ToyInfrasRepositoryImpl.countByCampaignIdAndStatus");
     return toyJPAMapper.countByCampaignIdAndStatus(campaignId, status);
   }
 
   @Override
   public int updateStatusByCampaignId(Long campaignId, Integer oldStatus, Integer newStatus) {
+    System.out.println("ToyInfrasRepositoryImpl.updateStatusByCampaignId");
     return 0;
   }
 
@@ -250,7 +268,8 @@ public class ToyInfrasRepositoryImpl implements ToyRepository {
 
   @Override
   public int addToysToCampaign(List<Long> toyIds, Long campaignId) {
-    return toyJPAMapper.updateStatusAndCampaignIdByIds(toyIds, campaignId, ToyStatus.GIVEAWAY_AVAILABLE.getValue());
+    return toyJPAMapper.updateStatusAndCampaignIdByIds(toyIds, campaignId,
+        ToyStatus.GIVEAWAY_AVAILABLE.getValue());
   }
 
   @Override

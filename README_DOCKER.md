@@ -1,439 +1,342 @@
-# Docker Deployment Guide - x-toy Application
+# X-Toy Docker Setup Guide
 
-Hướng dẫn triển khai ứng dụng x-toy trên Docker local.
+## Overview
 
-## 📋 Yêu cầu hệ thống
+This guide explains how to run the X-Toy application using Docker with all its dependencies including MySQL, Redis, Prometheus, and Grafana.
 
-- Docker 20.10+
-- Docker Compose 2.0+
-- RAM tối thiểu: 4GB
-- Disk space: 2GB
+## Prerequisites
 
-## 🚀 Triển khai nhanh
+- Docker Desktop installed and running
+- Docker Compose installed
+- At least 4GB of available RAM
+- At least 10GB of available disk space
 
-### 1. Build và khởi chạy
+## Quick Start
+
+### 1. Start All Services
 
 ```bash
-# Sử dụng script build
-./docker-scripts/build.sh
+# Make scripts executable
+chmod +x start-services.sh
+chmod +x docker-scripts/*.sh
 
-# Hoặc chạy thủ công
-docker-compose up -d --build
+# Start all services
+./start-services.sh start
 ```
 
-### 2. Kiểm tra trạng thái
+### 2. Verify Services
 
 ```bash
-# Kiểm tra tất cả services
-docker-compose ps
+# Check service status
+./start-services.sh status
 
-# Kiểm tra health
-curl http://localhost:1122/actuator/health
+# View logs
+./start-services.sh logs
 ```
 
-### 3. Test API
+### 3. Access Services
+
+- **Application**: http://localhost:1122
+- **Health Check**: http://localhost:1122/actuator/health
+- **Prometheus**: http://localhost:9090
+- **Grafana**: http://localhost:3000
+- **MySQL**: localhost:3306
+- **Redis**: localhost:6379
+
+## Service Management
+
+### Using start-services.sh
 
 ```bash
-# Test API cơ bản
-curl http://localhost:1122/api/test
+# Start all services
+./start-services.sh start
 
-# Test API đơn giản
-curl http://localhost:1122/api/test-simple
+# Stop all services
+./start-services.sh stop
+
+# Restart all services
+./start-services.sh restart
+
+# Build application
+./start-services.sh build
+
+# Show service status
+./start-services.sh status
+
+# View logs (default: x-toy-app)
+./start-services.sh logs
+
+# View specific service logs
+./start-services.sh logs mysql
+./start-services.sh logs redis
+
+# Clean up everything
+./start-services.sh cleanup
+
+# Show help
+./start-services.sh help
 ```
 
-## 📊 Services
-
-| Service   | Port | Description             | Health Check       |
-| --------- | ---- | ----------------------- | ------------------ |
-| x-toy-app | 1122 | Spring Boot Application | `/actuator/health` |
-| MySQL     | 3306 | Database                | `mysqladmin ping`  |
-| Redis     | 6379 | Cache                   | `redis-cli ping`   |
-
-## 🛠 Quản lý
-
-### Xem logs
+### Using docker-compose directly
 
 ```bash
-# Xem logs application
-./docker-scripts/logs.sh app
+# Start services
+docker-compose up -d
 
-# Follow logs real-time
-./docker-scripts/logs.sh -f
+# Stop services
+docker-compose down
 
-# Xem logs MySQL
-./docker-scripts/logs.sh mysql
+# View logs
+docker-compose logs -f
 
-# Xem tất cả logs
-./docker-scripts/logs.sh all -f
-```
+# View specific service logs
+docker-compose logs -f x-toy-app
+docker-compose logs -f mysql
+docker-compose logs -f redis
 
-### Dừng services
-
-```bash
-# Dừng services (giữ lại data)
-./docker-scripts/stop.sh
-
-# Dừng và xóa volumes (mất data)
-docker-compose down -v
-```
-
-### Restart services
-
-```bash
-# Restart application only
+# Restart specific service
 docker-compose restart x-toy-app
-
-# Restart tất cả
-docker-compose restart
 ```
 
-## 🔧 Cấu hình
+## Monitoring
+
+### Using monitor.sh
+
+```bash
+# Make script executable
+chmod +x docker-scripts/monitor.sh
+
+# Show real-time logs
+./docker-scripts/monitor.sh logs
+
+# Show resource usage
+./docker-scripts/monitor.sh resources
+
+# Show service health
+./docker-scripts/monitor.sh health
+
+# Show database statistics
+./docker-scripts/monitor.sh db-stats
+
+# Show application metrics
+./docker-scripts/monitor.sh metrics
+
+# Show all metrics
+./docker-scripts/monitor.sh all
+
+# Interactive monitoring menu
+./docker-scripts/monitor.sh interactive
+
+# Continuous monitoring dashboard
+./docker-scripts/monitor.sh continuous
+```
+
+### Using Prometheus & Grafana
+
+1. **Prometheus** (http://localhost:9090)
+
+   - View metrics from the application
+   - Check targets status
+   - Create basic queries
+
+2. **Grafana** (http://localhost:3000)
+   - Default credentials: admin/admin
+   - Add Prometheus as data source: http://prometheus:9090
+   - Create dashboards for monitoring
+
+## Backup and Restore
+
+### Using backup.sh
+
+```bash
+# Make script executable
+chmod +x docker-scripts/backup.sh
+
+# Create full backup (MySQL + Redis + Logs)
+./docker-scripts/backup.sh backup
+
+# Backup only MySQL
+./docker-scripts/backup.sh backup-mysql
+
+# Backup only Redis
+./docker-scripts/backup.sh backup-redis
+
+# Backup only logs
+./docker-scripts/backup.sh backup-logs
+
+# List available backups
+./docker-scripts/backup.sh list
+
+# Restore MySQL from backup
+./docker-scripts/backup.sh restore-mysql backups/mysql_backup_20241201_143022.sql
+
+# Restore Redis from backup
+./docker-scripts/backup.sh restore-redis backups/redis_backup_20241201_143022.rdb
+
+# Clean old backups (older than 7 days)
+./docker-scripts/backup.sh cleanup
+
+# Clean old backups (older than 30 days)
+./docker-scripts/backup.sh cleanup 30
+
+# Show backup statistics
+./docker-scripts/backup.sh stats
+```
+
+## Configuration
 
 ### Environment Variables
 
-Các biến môi trường chính trong `docker-compose.yml`:
+The application uses the following environment variables:
 
-```yaml
+```bash
 # Database
-DB_URL: jdbc:mysql://mysql:3306/java_demo
-DB_USERNAME: root
-DB_PASSWORD: password
+DB_URL=jdbc:mysql://mysql:3306/java_demo?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+DB_USERNAME=root
+DB_PASSWORD=password
 
 # Redis
-REDIS_HOST: redis
-REDIS_PASSWORD: GNwHez7OT53ftK5Ui3IOOlg1jUMwKT5
+REDIS_HOST=redis
+REDIS_PASSWORD=GNwHez7OT53ftK5Ui3IOOlg1jUMwKT5
 
-# JVM
-JAVA_OPTS: -server -Xms512m -Xmx1024m -XX:+UseG1GC
+# Application
+JAVA_OPTS=-server -Xms512m -Xmx1536m -XX:+UseG1GC -XX:+UseContainerSupport -XX:MaxGCPauseMillis=200 -XX:+ExitOnOutOfMemoryError
+SPRING_PROFILES_ACTIVE=docker
 ```
+
+### Ports
+
+- **1122**: Application
+- **3306**: MySQL
+- **6379**: Redis
+- **9090**: Prometheus
+- **3000**: Grafana
 
 ### Volumes
 
-- `mysql_data`: Dữ liệu MySQL
-- `redis_data`: Dữ liệu Redis
-- `app_logs`: Log files ứng dụng
+- `mysql_data`: MySQL data persistence
+- `redis_data`: Redis data persistence
+- `app_logs`: Application logs
 
-## 🐛 Troubleshooting
+## Troubleshooting
 
-### 1. Application không start
+### Common Issues
 
-```bash
-# Kiểm tra logs
-./docker-scripts/logs.sh app
+1. **Port conflicts**
 
-# Kiểm tra database connection
-docker-compose exec mysql mysql -u root -p -e "SHOW DATABASES;"
-```
+   ```bash
+   # Check what's using the ports
+   lsof -i :1122
+   lsof -i :3306
+   lsof -i :6379
+   ```
 
-### 2. Database connection error
+2. **Insufficient memory**
 
-```bash
-# Kiểm tra MySQL status
-docker-compose exec mysql mysqladmin ping -u root -p
+   ```bash
+   # Check Docker memory allocation
+   docker stats
+   ```
 
-# Reset database
-docker-compose down mysql
-docker volume rm x-toy_mysql_data
-docker-compose up -d mysql
-```
+3. **Database connection issues**
 
-### 3. Redis connection error
+   ```bash
+   # Check MySQL container
+   docker exec x-toy-mysql mysqladmin ping -h localhost
 
-```bash
-# Test Redis connection
-docker-compose exec redis redis-cli -a GNwHez7OT53ftK5Ui3IOOlg1jUMwKT5 ping
+   # Check application logs
+   ./start-services.sh logs x-toy-app
+   ```
 
-# Reset Redis
-docker-compose restart redis
-```
+4. **Redis connection issues**
+   ```bash
+   # Check Redis container
+   docker exec x-toy-redis redis-cli ping
+   ```
 
-### 4. Port conflicts
-
-Nếu port bị conflict, sửa trong `docker-compose.yml`:
-
-```yaml
-services:
-  x-toy-app:
-    ports:
-      - "8080:1122" # Thay đổi port external
-```
-
-## 📝 API Endpoints
-
-### Health Check
+### Debug Commands
 
 ```bash
-curl http://localhost:1122/actuator/health
-```
+# Check container status
+docker-compose ps
 
-### Test Endpoints
+# Check container logs
+docker-compose logs
 
-```bash
-# Basic test
-curl http://localhost:1122/api/test
-
-# Simple test
-curl http://localhost:1122/api/test-simple
-```
-
-### Business APIs
-
-```bash
-# Get campaigns
-curl http://localhost:1122/api/v1/campaigns
-
-# Get toys
-curl http://localhost:1122/api/v1/toys
-```
-
-## 🔄 Development Workflow
-
-### 1. Code changes
-
-```bash
-# Rebuild chỉ application
-docker-compose build x-toy-app
-docker-compose up -d x-toy-app
-
-# Hoặc rebuild toàn bộ
-./docker-scripts/build.sh
-```
-
-### 2. Database changes
-
-```bash
-# Reset database schema
-docker-compose down mysql
-docker volume rm x-toy_mysql_data
-docker-compose up -d
-```
-
-### 3. Debugging
-
-```bash
-# Vào container application
-docker-compose exec x-toy-app bash
-
-# Vào MySQL
-docker-compose exec mysql mysql -u root -p
-
-# Vào Redis
-docker-compose exec redis redis-cli -a GNwHez7OT53ftK5Ui3IOOlg1jUMwKT5
-```
-
-## 📊 Monitoring
-
-### Health Checks
-
-```bash
-# Application health
-curl http://localhost:1122/actuator/health
-
-# Detailed health info
-curl http://localhost:1122/actuator/health | jq .
-```
-
-### Metrics
-
-```bash
-# JVM metrics
-curl http://localhost:1122/actuator/metrics
-
-# Database metrics
-curl http://localhost:1122/actuator/metrics/hikaricp.connections
-```
-
-### Resource Usage
-
-```bash
-# Container stats
+# Check resource usage
 docker stats
 
-# Container resource usage
-docker-compose top
+# Access MySQL
+docker exec -it x-toy-mysql mysql -u root -ppassword
+
+# Access Redis
+docker exec -it x-toy-redis redis-cli
+
+# Access application container
+docker exec -it x-toy-app /bin/bash
 ```
 
-## 🔒 Security Notes
+### Performance Tuning
 
-1. **Production**: Thay đổi tất cả passwords mặc định
-2. **Network**: Sử dụng custom bridge network
-3. **User**: Application chạy với non-root user
-4. **Secrets**: Sử dụng Docker secrets trong production
+1. **Increase Docker memory allocation** (Docker Desktop settings)
+2. **Adjust JVM settings** in docker-compose.yml:
 
-## 📁 File Structure
+   ```yaml
+   environment:
+     JAVA_OPTS: -server -Xms1g -Xmx2g -XX:+UseG1GC
+   ```
 
-```
-x-toy/
-├── docker-compose.yml          # Main Docker Compose file
-├── Dockerfile                  # Multi-stage build file
-├── .dockerignore              # Docker ignore patterns
-├── docker/
-│   └── mysql/
-│       └── init.sql           # MySQL initialization
-├── docker-scripts/
-│   ├── build.sh              # Build script
-│   ├── stop.sh               # Stop script
-│   └── logs.sh               # Logs script
-└── toy-starter/src/main/resources/
-    └── application-docker.yml  # Docker-specific config
-```
+3. **Optimize MySQL settings**:
+   ```sql
+   SET GLOBAL innodb_buffer_pool_size = 256 * 1024 * 1024;
+   SET GLOBAL max_connections = 200;
+   ```
 
-## 🎯 Next Steps
+## Development
 
-1. **CI/CD**: Tích hợp với GitHub Actions/Jenkins
-2. **Monitoring**: Thêm Prometheus + Grafana
-3. **Logging**: Centralized logging với ELK stack
-4. **Scaling**: Multi-instance deployment
-5. **Production**: Kubernetes deployment
-
-# Xem logs
-
-docker logs x-toy-app -f
-
-# Kiểm tra status
-
-docker ps
-
-# Stop all services
-
-docker stop x-toy-app x-toy-mysql x-toy-redis
-
-# Start lại
-
-docker start x-toy-mysql x-toy-redis x-toy-app
-
-# Check tại sao container x-toy-app lại tự động stop.
-
-## Xác nhận việc container tự khởi động lại
-
-```
-  docker inspect --format='{{.RestartCount}}' x-toy-app
-```
-
-## Nếu kết quả > 0 → container đã bị restart nhiều lần.
-
-## Xem lại 100 dòng gần nhất trong container
-
-```
-  docker logs --tail 100 x-toy-app
-```
-
-## 🔍 Kiểm tra health status:
-
-```
-  docker inspect --format='{{json .State.Health}}' x-toy-app
-```
-
-## Check Exit Code Meaning
-
-docker inspect x-toy-app --format='Exit Code: {{.State.ExitCode}}'
-
-```
- -> Exit Code: 137
-
- What Exit Code 137 Really Means:
- 137 = 128 + 9 → killed by SIGKILL (kill -9)
-
- Most common reason in Docker: OOM (Out of Memory)
-
- The Linux kernel kills the container process when memory runs out to protect the host system
-```
-
-| Exit Code | Meaning                             |
-| --------- | ----------------------------------- |
-| `0`       | Exited normally (no error)          |
-| `1`       | General error (exception, crash)    |
-| `137`     | Killed (likely OOM — out of memory) |
-| `143`     | Graceful stop (SIGTERM)             |
-| `139`     | Segmentation fault                  |
-
-## 🔍 Giải thích dòng này trong Dockerfile:
-
-` ENV JAVA_OPTS="-server -Xms512m -Xmx1024m -XX:+UseG1GC -XX:+UseContainerSupport"`
-
-| Tham số                    | Ý nghĩa                                        |
-| -------------------------- | ---------------------------------------------- |
-| `-Xms512m`                 | JVM sẽ **khởi động với 512MB** bộ nhớ heap     |
-| `-Xmx1024m`                | JVM có thể dùng tối đa **1024MB** heap         |
-| `-XX:+UseContainerSupport` | JVM **nhận diện hạn chế tài nguyên container** |
-| `-XX:+UseG1GC`             | Garbage Collector: tốt với app lớn, ổn định    |
-
-## Khi container đang chạy
-
-`docker stats x-toy-app`
-
-`CONTAINER ID   NAME        CPU %     MEM USAGE / LIMIT     MEM %     NET I/O         BLOCK I/O       PIDS
-a48468cbd050   x-toy-app   0.21%     657.7MiB / 1.914GiB   33.56%    26.9kB / 19kB   135MB / 135kB   36 `
-
-## Docker Memory Management Summary
-
-### **Problem**: Exit code 137 (container killed by Docker)
-
-### **Root Cause**:
-
-- Container exceeded Docker's memory limit (not physical RAM shortage)
-- JVM heap + non-heap + system memory > Docker limit
-
-### **Solution Applied**:
-
-```dockerfile
-# OLD CONFIG
-ENV JAVA_OPTS="-Xms512m -Xmx1024m"
-
-# NEW CONFIG
-ENV JAVA_OPTS="-Xms256m -Xmx768m -XX:+UseG1GC -XX:+UseContainerSupport"
-```
-
-### **Memory Breakdown**:
-
-```
-JVM Heap:           768MB (was 1024MB)
-+ Non-heap memory:  ~300MB
-+ System memory:    ~200MB
-= Total usage:      ~1.3GB (was ~1.5-1.8GB)
-```
-
-### **Result**:
-
-- Docker stats: `657.7MiB / 1.914GiB (33.56%)`
-- Container stable, no more exit code 137
-- Trade-off: Slightly lower performance for better stability
-
-### **Key Insight**:
-
-Docker limit ≠ JVM allocation. Container total memory usage must stay under Docker's hard limit to avoid being killed.
-
-## Fix Docker Memory with Colima - Summary
-
-### **Problem**: Docker memory limit too low (2GB causing OOM exit code 137)
-
-### **Solution**:
+### Building from source
 
 ```bash
-# 1. Stop Colima
-colima stop
+# Build application
+./start-services.sh build
 
-# 2. Start with more memory
-colima start --memory 4 --cpu 4
-
-# 3. Verify
-colima list
-docker system info | grep Memory
+# Rebuild without cache
+docker-compose build --no-cache
 ```
 
-### **Result**:
+### Adding new services
 
-- **Before**: 2GiB → **After**: 4GiB (3.814GiB available)
-- CPU: 2 cores → 4 cores
-- No more OOM kills (exit code 137)
+1. Add service to `docker-compose.yml`
+2. Update health checks
+3. Add to monitoring scripts if needed
 
-### **Key Commands**:
+### Custom configurations
 
-- `colima list` - Check current resources
-- `colima stop` - Stop VM
-- `colima start --memory X --cpu Y` - Start with custom resources
-- `docker system info` - Verify Docker sees new limits
+1. Modify `application-docker.yml` for application settings
+2. Modify `docker-compose.yml` for service configurations
+3. Modify `prometheus.yml` for monitoring settings
 
-### **Note**:
+## Security Considerations
 
-Colima creates a VM, so memory must be allocated at VM level, not just Docker container level.
+1. **Change default passwords** in production
+2. **Use secrets management** for sensitive data
+3. **Enable SSL/TLS** for external access
+4. **Restrict network access** using Docker networks
+5. **Regular security updates** for base images
+
+## Production Deployment
+
+1. **Use production-grade images**
+2. **Implement proper logging**
+3. **Set up monitoring and alerting**
+4. **Configure backups**
+5. **Use orchestration tools** (Kubernetes, Docker Swarm)
+
+## Support
+
+For issues and questions:
+
+1. Check the troubleshooting section
+2. Review application logs
+3. Check service health status
+4. Verify Docker and system resources

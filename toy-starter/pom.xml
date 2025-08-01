@@ -38,6 +38,12 @@
     </dependency>
 
     <dependency>
+      <artifactId>toy-domain</artifactId>
+      <groupId>locser</groupId>
+      <version>${project.version}</version>
+    </dependency>
+
+    <dependency>
       <artifactId>mysql-connector-j</artifactId>
       <groupId>com.mysql</groupId>
       <scope>runtime</scope>
@@ -53,6 +59,12 @@
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-starter-data-redis</artifactId>
     </dependency>
+
+    <!-- OAuth2 Client
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-oauth2-client</artifactId>
+    </dependency> -->
 
     <!-- Jackson JSR310 for Java 8 date/time support -->
     <dependency>

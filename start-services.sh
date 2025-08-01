@@ -1,70 +1,216 @@
 #!/bin/bash
 
-# Start x-toy services manually (alternative to docker-compose)
+# X-Toy Docker Services Management Script
+# This script helps manage the x-toy application and its dependencies
+
 set -e
 
-echo "🚀 Starting x-toy services..."
-
-# Colors
+# Colors for output
+RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
-RED='\033[0;31m'
-NC='\033[0m'
+BLUE='\033[0;34m'
+NC='\033[0m' # No Color
 
+# Function to print colored output
 print_status() {
     echo -e "${GREEN}[INFO]${NC} $1"
 }
 
 print_warning() {
-    echo -e "${YELLOW}[WARN]${NC} $1"
+    echo -e "${YELLOW}[WARNING]${NC} $1"
 }
 
 print_error() {
     echo -e "${RED}[ERROR]${NC} $1"
 }
 
-# Create network
-print_status "Creating network..."
-docker network create x-toy-network 2>/dev/null || print_warning "Network already exists"
+print_header() {
+    echo -e "${BLUE}================================${NC}"
+    echo -e "${BLUE}$1${NC}"
+    echo -e "${BLUE}================================${NC}"
+}
 
-# Start MySQL
-print_status "Starting MySQL..."
-docker run -d --name x-toy-mysql \
-  --network x-toy-network \
-  -p 3306:3306 \
-  -e MYSQL_DATABASE=java_demo \
-  -e MYSQL_ROOT_PASSWORD=password \
-  -e MYSQL_USER=appuser \
-  -e MYSQL_PASSWORD=password \
-  -v mysql_data:/var/lib/mysql \
-  -v ./docker/mysql/init.sql:/docker-entrypoint-initdb.d/init.sql:ro \
-  --restart unless-stopped \
-  mysql:8.0 2>/dev/null || print_warning "MySQL already running"
+# Check if Docker is running
+check_docker() {
+    if ! docker info > /dev/null 2>&1; then
+        print_error "Docker is not running. Please start Docker and try again."
+        exit 1
+    fi
+    print_status "Docker is running"
+}
 
-# Start Redis
-print_status "Starting Redis..."
-docker run -d --name x-toy-redis \
-  --network x-toy-network \
-  -p 6379:6379 \
-  -v redis_data:/data \
-  --restart unless-stopped \
-  redis:7.2-alpine \
-  redis-server --requirepass GNwHez7OT53ftK5Ui3IOOlg1jUMwKT5 2>/dev/null || print_warning "Redis already running"
+# Build the application
+build_app() {
+    print_header "Building x-toy application"
+    docker-compose build --no-cache
+    print_status "Application built successfully"
+}
 
-# Wait for services
-print_status "Waiting for services to be ready..."
-sleep 10
+# Start all services
+start_services() {
+    print_header "Starting x-toy services"
 
-# Build and start app
-print_status "Building and starting x-toy app..."
-docker build -t x-toy-app:latest .
+    # Check if services are already running
+    # grafana: admin/admin
+    if docker-compose ps | grep -q "Up"; then
+        print_warning "Some services are already running. Stopping them first..."
+        docker-compose down
+    fi
 
-docker build -t x-toy-app . && docker run -d --name x-toy-app -p 1122:1122 -e "DB_URL=jdbc:mysql://host.docker.internal:3307/java_demo?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC" -e "DB_USERNAME=root" -e "DB_PASSWORD=password" -e "REDIS_HOST=host.docker.internal" -e "REDIS_PASSWORD=GNwHez7OT53ftK5Ui3IOOlg1jUMwKT5" -e "JAVA_OPTS=-server -Xms512m -Xmx1536m -XX:+UseG1GC -XX:+UseContainerSupport -XX:MaxGCPauseMillis=200 -XX:+ExitOnOutOfMemoryError -Dspring.profiles.active=docker" -e "SPRING_PROFILES_ACTIVE=docker" --memory=2g x-toy-app
+    # Start services in background
+    docker-compose up -d
 
-print_status "Services started successfully!"
-print_status "Application available at: http://localhost:1122"
-print_status "Health check: http://localhost:1122/actuator/health"
+    print_status "Services started. Waiting for them to be ready..."
 
-echo ""
-print_status "Service status:"
-docker ps --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}"
+    # Wait for services to be healthy
+    wait_for_services
+
+    print_status "All services are ready!"
+    show_service_status
+}
+
+# Stop all services
+stop_services() {
+    print_header "Stopping x-toy services"
+    docker-compose down
+    print_status "Services stopped"
+}
+
+# Restart all services
+restart_services() {
+    print_header "Restarting x-toy services"
+    docker-compose restart
+    print_status "Services restarted"
+}
+
+# only start x-toy-app
+start_app() {
+    print_header "Starting x-toy-app"
+    docker-compose up -d x-toy-app
+    print_status "x-toy-app started"
+}
+
+# Show service status
+show_service_status() {
+    print_header "Service Status"
+    docker-compose ps
+
+    echo ""
+    print_status "Service URLs:"
+    echo "  Application: http://localhost:1122"
+    echo "  Health Check: http://localhost:1122/actuator/health"
+    echo "  Prometheus: http://localhost:9090"
+    echo "  Grafana: http://localhost:3000"
+    echo "  MySQL: localhost:3307"
+    echo "  Redis: localhost:6379"
+    echo "  Elasticsearch: localhost:9200"
+    echo "  Kibana: localhost:5601"
+    echo "  Logstash: localhost:5044"
+    echo "  MySQL Exporter: localhost:9104"
+    echo "  Redis Exporter: localhost:9121"
+    echo "  Node Exporter: localhost:9100"
+}
+
+# Wait for services to be healthy
+wait_for_services() {
+    local max_attempts=30
+    local attempt=1
+
+    print_status "Waiting for services to be ready..."
+
+    while [ $attempt -le $max_attempts ]; do
+        if docker-compose ps | grep -q "healthy"; then
+            print_status "All services are healthy!"
+            return 0
+        fi
+
+        echo -n "."
+        sleep 2
+        attempt=$((attempt + 1))
+    done
+
+    print_warning "Some services may not be fully ready. Check with 'docker-compose ps'"
+}
+
+# Show logs
+show_logs() {
+    local service=${1:-"x-toy-app"}
+    print_header "Showing logs for $service"
+    docker-compose logs -f $service
+}
+
+# Clean up everything
+cleanup() {
+    print_header "Cleaning up all containers and volumes"
+    docker-compose down -v
+    docker system prune -f
+    print_status "Cleanup completed"
+}
+
+# Show help
+show_help() {
+    echo "X-Toy Docker Services Management Script"
+    echo ""
+    echo "Usage: $0 [COMMAND]"
+    echo ""
+    echo "Commands:"
+    echo "  start       Start all services"
+    echo "  startapp    Start x-toy-app"
+    echo "  stop        Stop all services"
+    echo "  restart     Restart all services"
+    echo "  build       Build the application"
+    echo "  status      Show service status"
+    echo "  logs [SERVICE]  Show logs (default: x-toy-app)"
+    echo "  cleanup     Remove all containers and volumes"
+    echo "  help        Show this help message"
+    echo ""
+    echo "Examples:"
+    echo "  $0 start"
+    echo "  $0 logs mysql"
+    echo "  $0 cleanup"
+}
+
+# Main script logic
+main() {
+    check_docker
+
+    case "${1:-help}" in
+        start)
+            start_services
+            ;;
+
+        startapp)
+            start_app
+            ;;
+        stop)
+            stop_services
+            ;;
+        restart)
+            restart_services
+            ;;
+        build)
+            build_app
+            ;;
+        status)
+            show_service_status
+            ;;
+        logs)
+            show_logs "$2"
+            ;;
+        cleanup)
+            cleanup
+            ;;
+        help|--help|-h)
+            show_help
+            ;;
+        *)
+            print_error "Unknown command: $1"
+            show_help
+            exit 1
+            ;;
+    esac
+}
+
+# Run main function with all arguments
+main "$@"

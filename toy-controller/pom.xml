@@ -35,12 +35,26 @@
       <version>1.7.0</version>
     </dependency>
     <dependency>
-      <groupId>locser</groupId>
       <artifactId>toy-application</artifactId>
-      <version>1.0-SNAPSHOT</version>
+      <groupId>locser</groupId>
       <scope>compile</scope>
+      <version>1.0-SNAPSHOT</version>
+    </dependency>
+    <dependency>
+      <artifactId>spring-boot-starter-web</artifactId>
+      <groupId>org.springframework.boot</groupId>
+    </dependency>
+    <dependency>
+      <artifactId>jackson-databind</artifactId>
+      <groupId>com.fasterxml.jackson.core</groupId>
     </dependency>
 
+    <!-- https://mvnrepository.com/artifact/org.springframework.security/spring-security-oauth2-client -->
+    <!--    <dependency>-->
+    <!--      <artifactId>spring-security-oauth2-client</artifactId>-->
+    <!--      <groupId>org.springframework.security</groupId>-->
+    <!--      <version>6.4.4</version>-->
+    <!--    </dependency>-->
 
   </dependencies>
 

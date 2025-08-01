@@ -9,12 +9,10 @@ services:
       MYSQL_USER: appuser
       MYSQL_PASSWORD: password
     ports:
-      - "3306:3306"
+      - "3307:3306"
     volumes:
       - mysql_data:/var/lib/mysql
       - ./docker/mysql/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
-    networks:
-      - x-toy-network
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
       timeout: 20s
@@ -29,8 +27,6 @@ services:
       - "6379:6379"
     volumes:
       - redis_data:/data
-    networks:
-      - x-toy-network
     healthcheck:
       test: ["CMD", "redis-cli", "--raw", "incr", "ping"]
       timeout: 3s
@@ -54,8 +50,6 @@ services:
       SPRING_PROFILES_ACTIVE: docker
     volumes:
       - app_logs:/app/logs
-    networks:
-      - x-toy-network
     depends_on:
       mysql:
         condition: service_healthy
@@ -74,11 +68,90 @@ services:
         reservations:
           memory: 1G
 
+  prometheus:
+    image: prom/prometheus
+    container_name: x-toy-prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+    restart: unless-stopped
+
+  grafana:
+    image: grafana/grafana
+    container_name: x-toy-grafana
+    ports:
+      - "3000:3000"
+    # volumes:
+    #   - ./grafana/provisioning/datasources:/etc/grafana/provisioning/datasources
+    restart: unless-stopped
+    hostname: grafana
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_USERS_ALLOW_SING_UP=false
+      - GF_SERVER_DOMAIN=localhost
+      #enable logger
+      - GF_LOG_MODE=console file
+      - GF_LOG_FILTERS=alerting.notifier.slack:debug alermanager:debug ngalert:debug
+
+  elasticsearch:
+    image: elasticsearch:7.17.25
+    container_name: x-toy-elasticsearch
+    volumes:
+      - ./docker/elk/elasticsearch.yml:/usr/share/elasticsearch/config/elasticsearch.yml
+    ports:
+      - "9200:9200"
+      - "9300:9300"
+    environment:
+      ES_JAVA_OPTS: "-Xmx256m -Xms256m"
+      discovery.type: single-node
+
+  logstash:
+    image: logstash:7.17.25
+    container_name: x-toy-logstash
+    volumes:
+      - ./docker/elk/logstash.yml:/usr/share/logstash/config/logstash.yml
+      - ./docker/elk/pipeline:/usr/share/logstash/pipeline
+    ports:
+      - "5044:5044"
+      - "5033:5000/tcp"
+      - "5022:5000/udp"
+      - "9600:9600"
+    environment:
+      LS_JAVA_OPTS: "-Xmx256m -Xms256m"
+
+    depends_on:
+      - elasticsearch
+
+  kibana:
+    image: kibana:7.17.25
+    container_name: x-toy-kibana
+    volumes:
+      - ./docker/elk/kibana.yml:/usr/share/kibana/config/kibana.yml
+    ports:
+      - "5601:5601"
+
+    depends_on:
+      - elasticsearch
+
+  redis-exporter:
+    image: oliver006/redis_exporter
+    command: -redis.addr redis://x-toy-redis:6379
+    ports:
+      - 9121:9121
+
+  mysqld-exporter:
+    image: prom/mysqld-exporter
+    container_name: x-toy-mysqld-exporter
+    ports:
+      - "9104:9104"
+    environment:
+      - DATA_SOURCE_NAME=root:password@tcp(mysql:3306)/
+    depends_on:
+      mysql:
+        condition: service_healthy
+
 volumes:
   mysql_data:
   redis_data:
   app_logs:
-
-networks:
-  x-toy-network:
-    driver: bridge

@@ -13,7 +13,9 @@ import locser.persistence.mapper.EventJPAMapper;
 import locser.toy.domain.model.entity.Event;
 import locser.toy.domain.model.enums.EventStatus;
 import locser.toy.domain.repository.EventRepository;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @Service
 public class EventInfrasRepositoryImpl implements EventRepository {
 
@@ -25,7 +27,7 @@ public class EventInfrasRepositoryImpl implements EventRepository {
 
   @Override
   public Optional<Event> findOneById(Long id) {
-    System.out.println("GET EVENT FROM DATABASE");
+    log.info("GET EVENT FROM DATABASE");
     return this.eventJPAMapper.findOneById(id);
   }
 
@@ -36,7 +38,7 @@ public class EventInfrasRepositoryImpl implements EventRepository {
 
   @Override
   public Event findById(Long id) {
-    System.out.println("GET EVENT FROM DATABASE");
+    log.info("GET EVENT FROM DATABASE");
     return eventJPAMapper.findById(id).orElse(null);
   }
 
@@ -153,5 +155,10 @@ public class EventInfrasRepositoryImpl implements EventRepository {
     }
 
     return Sort.by(direction, field);
+  }
+
+  @Override
+  public Event findByIdAndTypeAndStatus(Long id, Integer type, Integer status) {
+    return eventJPAMapper.findByIdAndTypeAndStatus(id, type, status);
   }
 }

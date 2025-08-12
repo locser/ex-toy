@@ -120,4 +120,6 @@ public interface GiveawayCampaignApplicationService {
 
         List<Toy> getToysInCampaign(Long campaignId, Integer status, Long userId, String name,
                         Long toyCondition, int page, int limit);
+
+        Long claim10kGiveaway(Long userId, Long campaignId);
 }

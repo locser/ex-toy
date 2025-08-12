@@ -90,4 +90,6 @@ public interface EventRepository {
    * @return Number of rows updated (1 if successful, 0 if no toys available)
    */
   void decrementAvailableToys(Long campaignId, int count);
+
+  Event findByIdAndTypeAndStatus(Long id, Integer type, Integer status);
 }

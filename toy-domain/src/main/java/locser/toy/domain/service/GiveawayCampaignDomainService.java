@@ -33,6 +33,8 @@ public interface GiveawayCampaignDomainService {
      */
     Event getGiveawayCampaignById(Long id);
 
+    Event getGiveawayCampaignById(Long id, Integer type, Integer status);
+
     /**
      * Xác thực và cập nhật giveaway campaign.
      *
@@ -66,14 +68,6 @@ public interface GiveawayCampaignDomainService {
     // List<Toy> getAvailableToysInCampaign(Event event);
 
     Toy getAvailableToyInCampaign(Event event);
-
-    /**
-     * Đếm số lượng toys có sẵn trong campaign.
-     *
-     * @param campaignId ID của campaign
-     * @return Số lượng toys có sẵn
-     */
-    long countAvailableToysInCampaign(Long campaignId);
 
     /**
      * Đếm tổng số toys trong campaign.
@@ -221,4 +215,6 @@ public interface GiveawayCampaignDomainService {
     List<Toy> getToysInCampaign(Specification<Toy> specification);
 
     List<Toy> getToysInCampaign(Specification<Toy> specification, Pageable pageable);
+
+    Long claim10kGiveaway(Long userId, Long campaignId);
 }

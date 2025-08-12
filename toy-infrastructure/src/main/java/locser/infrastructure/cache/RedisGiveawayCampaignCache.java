@@ -1,11 +1,14 @@
 package locser.infrastructure.cache;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
-import locser.toy.domain.model.entity.Event;
+
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+import locser.toy.domain.model.entity.Event;
 
 @Service
 public class RedisGiveawayCampaignCache {
@@ -15,6 +18,7 @@ public class RedisGiveawayCampaignCache {
   private static final String USER_PARTICIPATION_KEY_PREFIX = "campaign:user:";
   private static final long CAMPAIGN_CACHE_TTL = 24; // 24 hours
   private static final long USER_PARTICIPATION_CACHE_TTL = 7; // 7 days
+  private static final String AVAILABLE_TOYS_COUNT_KEY_PREFIX = "campaign:toys:count:";
 
   private final RedisTemplate<String, Object> redisTemplate;
 
@@ -100,9 +104,13 @@ public class RedisGiveawayCampaignCache {
     return toyId != null ? Long.parseLong(toyId.toString()) : null;
   }
 
-  public long getAvailableToysCount(Long campaignId) {
-    String key = AVAILABLE_TOYS_KEY_PREFIX + campaignId;
-    return redisTemplate.opsForSet().size(key);
+  public int getAvailableToysCount(Long campaignId) {
+    String key = AVAILABLE_TOYS_COUNT_KEY_PREFIX + campaignId;
+    Object count = redisTemplate.opsForValue().get(key);
+    if (count == null) {
+      return -1;
+    }
+    return Integer.parseInt(count.toString());
   }
 
   public void markUserParticipated(Long userId, Long campaignId) {
@@ -147,5 +155,10 @@ public class RedisGiveawayCampaignCache {
     public Integer availableToys;
     public String createdAt; // Store as ISO string
     public String updatedAt; // Store as ISO string
+  }
+
+  public void cacheAvailableToysCount(Long campaignId, int count) {
+    String key = AVAILABLE_TOYS_COUNT_KEY_PREFIX + campaignId;
+    redisTemplate.opsForValue().set(key, count, CAMPAIGN_CACHE_TTL, TimeUnit.HOURS);
   }
 }

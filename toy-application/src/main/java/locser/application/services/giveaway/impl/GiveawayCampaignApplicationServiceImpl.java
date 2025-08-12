@@ -19,11 +19,15 @@ import locser.toy.domain.model.dto.ToyParticipationDTO;
 import locser.toy.domain.model.entity.Event;
 import locser.toy.domain.model.entity.Toy;
 import locser.toy.domain.model.entity.ToyParticipation;
+import locser.toy.domain.model.enums.EventStatus;
 import locser.toy.domain.model.enums.EventType;
 import locser.toy.domain.repository.EventRepository;
 import locser.toy.domain.service.GiveawayCampaignDomainService;
 import locser.toy.domain.specifications.ToySpecification;
 import locser.util.PageResponse;
+import locser.toy.domain.service.DomainEventPublisher;
+import locser.toy.domain.model.event.ParticipationCreatedEvent;
+import locser.toy.domain.model.enums.ToyParticipationStatus;
 
 /**
  * Triển khai các dịch vụ ứng dụng cho Giveaway Campaign.
@@ -34,14 +38,17 @@ public class GiveawayCampaignApplicationServiceImpl implements GiveawayCampaignA
   private final GiveawayCampaignDomainService giveawayCampaignDomainService;
   private final EventRepository eventRepository;
   private final ToySpecification toySpecification;
+  private final DomainEventPublisher domainEventPublisher;
 
   public GiveawayCampaignApplicationServiceImpl(
       GiveawayCampaignDomainService giveawayCampaignDomainService,
       EventRepository eventRepository,
-      ToySpecification toySpecification) {
+      ToySpecification toySpecification,
+      DomainEventPublisher domainEventPublisher) {
     this.giveawayCampaignDomainService = giveawayCampaignDomainService;
     this.eventRepository = eventRepository;
     this.toySpecification = toySpecification;
+    this.domainEventPublisher = domainEventPublisher;
   }
 
   @Override
@@ -128,11 +135,11 @@ public class GiveawayCampaignApplicationServiceImpl implements GiveawayCampaignA
 
   @Override
   public GiveawayCampaignStatsDTO getGiveawayCampaignStats(Long campaignId) {
-    Event campaign = giveawayCampaignDomainService.getGiveawayCampaignById(campaignId);
+    Event campaign = giveawayCampaignDomainService.getGiveawayCampaignById(campaignId,
+        EventType.GIVEAWAY.getValue(), EventStatus.ONGOING.getValue());
 
     long totalToys = giveawayCampaignDomainService.countTotalToysInCampaign(campaignId);
     long availableToys = campaign.getAvailableToys();
-    // giveawayCampaignDomainService.countAvailableToysInCampaign(campaignId);
     long claimedToys = totalToys - availableToys;
     long totalParticipants = giveawayCampaignDomainService.countCampaignParticipations(campaignId);
 
@@ -256,6 +263,25 @@ public class GiveawayCampaignApplicationServiceImpl implements GiveawayCampaignA
     Pageable pageable = PageRequest.of(page - 1, limit);
 
     return giveawayCampaignDomainService.getToysInCampaign(specification, pageable);
+  }
+
+  @Override
+  @Transactional
+  public Long claim10kGiveaway(Long userId, Long campaignId) {
+    // Call domain service to handle the core business logic
+    Long toyId = giveawayCampaignDomainService.claim10kGiveaway(userId, campaignId);
+    
+    // Publish domain event at application layer (following DDD principles)
+    ParticipationCreatedEvent participationEvent = new ParticipationCreatedEvent(
+        toyId,
+        userId,
+        campaignId,
+        ToyParticipationStatus.CLAIMED.getValue()
+    );
+    
+    domainEventPublisher.publish(participationEvent);
+    
+    return toyId;
   }
 
 }

@@ -1,6 +1,7 @@
 package locser.controller.http;
 
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -286,5 +287,21 @@ public class GiveawayCampaignController {
     return BaseResponse.success(
         GiveawayCampaignDTOMapper.toToyParticipationResponseDTO(participation),
         message);
+  }
+
+  // @RateLimiter(name = "giveaway-participation")
+
+  // 10k let's go
+  @PostMapping("/giveaway-campaigns/{campaignId}/claim10k")
+  public BaseResponse claimGiveaway(
+      @PathVariable @ValidId Long campaignId,
+      @RequestHeader("X-User-Id") Long userId) {
+
+    Long result = giveawayCampaignService
+        .claim10kGiveaway(userId, campaignId);
+
+    return BaseResponse.success(
+        Map.of("id", result),
+        "Nhận đồ chơi thành công");
   }
 }

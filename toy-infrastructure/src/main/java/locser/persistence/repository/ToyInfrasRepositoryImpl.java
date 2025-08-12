@@ -2,16 +2,18 @@ package locser.persistence.repository;
 
 import java.util.List;
 import java.util.Optional;
-import locser.persistence.mapper.ToyJPAMapper;
-import locser.toy.domain.model.entity.Toy;
-import locser.toy.domain.model.enums.ToyStatus;
-import locser.toy.domain.repository.ToyRepository;
+
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Direction;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
+
+import locser.persistence.mapper.ToyJPAMapper;
+import locser.toy.domain.model.entity.Toy;
+import locser.toy.domain.model.enums.ToyStatus;
+import locser.toy.domain.repository.ToyRepository;
 
 /**
  * Implementation of ToyRepository using JPA.
@@ -110,7 +112,8 @@ public class ToyInfrasRepositoryImpl implements ToyRepository {
   }
 
   /**
-   * Converts the special value ALL_RECORDS (-1) to null to indicate no filtering. Any other value
+   * Converts the special value ALL_RECORDS (-1) to null to indicate no filtering.
+   * Any other value
    * is returned as is.
    *
    * @param value The value to check
@@ -233,7 +236,7 @@ public class ToyInfrasRepositoryImpl implements ToyRepository {
   }
 
   @Override
-  public long countByCampaignIdAndStatus(Long campaignId, Integer status) {
+  public int countByCampaignIdAndStatus(Long campaignId, Integer status) {
     System.out.println("ToyInfrasRepositoryImpl.countByCampaignIdAndStatus");
     return toyJPAMapper.countByCampaignIdAndStatus(campaignId, status);
   }

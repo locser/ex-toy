@@ -22,4 +22,11 @@ public interface GiveawayCampaignRepository {
     void markUserParticipated(Long userId, Long campaignId);
 
     void decrementAvailableToys(Long campaignId, int count);
+
+    Event findByIdAndTypeAndStatus(Long id, Integer type, Integer status);
+
+    int getAvailableToysCount(Long campaignId);
+
+    Long find10kAvailableToy(Long campaignId);
+
 }

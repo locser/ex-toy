@@ -2,6 +2,12 @@ package locser.toy.domain.service.impl;
 
 import java.time.LocalDateTime;
 import java.util.List;
+
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import locser.toy.domain.exception.BadRequestException;
 import locser.toy.domain.model.entity.Event;
 import locser.toy.domain.model.entity.Toy;
@@ -15,10 +21,6 @@ import locser.toy.domain.repository.ToyParticipationRepository;
 import locser.toy.domain.repository.ToyRepository;
 import locser.toy.domain.service.GiveawayCampaignDomainService;
 import locser.toy.domain.validation.IdValidator;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.jpa.domain.Specification;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 /**
  * Triển khai các dịch vụ miền cho Giveaway Campaign.
@@ -62,8 +64,19 @@ public class GiveawayCampaignDomainServiceImpl implements GiveawayCampaignDomain
       throw new BadRequestException("Không tìm thấy chiến dịch");
     }
     if (event.getType() != EventType.GIVEAWAY.getValue()) {
-      throw new BadRequestException("Chiến dịch không phải là giveaway campaign");
+      throw new BadRequestException("Chiến dịch không phải là chiến dịch Giveaway");
     }
+    return event;
+  }
+
+  @Override
+  public Event getGiveawayCampaignById(Long id, Integer type, Integer status) {
+
+    Event event = giveawayCampaignRepository.findByIdAndTypeAndStatus(id, type, status);
+    if (event == null) {
+      throw new BadRequestException("Không tìm thấy chiến dịch");
+    }
+
     return event;
   }
 
@@ -231,13 +244,6 @@ public class GiveawayCampaignDomainServiceImpl implements GiveawayCampaignDomain
   }
 
   @Override
-  public long countAvailableToysInCampaign(Long campaignId) {
-    IdValidator.validateId(campaignId, "Campaign");
-    return toyRepository.countByCampaignIdAndStatus(campaignId,
-        ToyStatus.GIVEAWAY_AVAILABLE.getValue());
-  }
-
-  @Override
   public long countTotalToysInCampaign(Long campaignId) {
     IdValidator.validateId(campaignId, "Campaign");
     long available = toyRepository.countByCampaignIdAndStatus(campaignId,
@@ -269,8 +275,8 @@ public class GiveawayCampaignDomainServiceImpl implements GiveawayCampaignDomain
 
   @Override
   public int hasUserParticipated(Long userId, Long campaignId) {
-    IdValidator.validateId(userId, "User");
-    IdValidator.validateId(campaignId, "Campaign");
+    // IdValidator.validateId(userId, "User");
+    // IdValidator.validateId(campaignId, "Campaign");
     return toyParticipationRepository.existsByUserIdAndCampaignId(userId, campaignId) ? 1 : 0;
   }
 
@@ -345,6 +351,36 @@ public class GiveawayCampaignDomainServiceImpl implements GiveawayCampaignDomain
     }
 
     return 0;
+  }
+
+  @Override
+  public Long claim10kGiveaway(Long userId, Long campaignId) {
+    getGiveawayCampaignById(campaignId, EventType.GIVEAWAY.getValue(),
+        EventStatus.ONGOING.getValue());
+
+    int availableToysCount = giveawayCampaignRepository.getAvailableToysCount(campaignId);
+
+    if (availableToysCount < 1) {
+      throw new BadRequestException("Chiến dịch tạm thời đã hết đồ chơi, hãy quay lại sau nha.");
+    }
+
+    // Kiểm tra user đã tham gia chưa
+    if (giveawayCampaignRepository.hasUserParticipated(userId, campaignId)) {
+      throw new BadRequestException("Bạn đã tham gia chiến dịch này rồi");
+    }
+
+    Long toyId = giveawayCampaignRepository.find10kAvailableToy(campaignId);
+    if (toyId == -1L) {
+      throw new BadRequestException("Chiến dịch tạm thời đã hết đồ chơi, hãy quay lại sau nha.");
+    }
+
+    // update toy status to claimed
+    toyRepository.updateStatus(toyId, ToyStatus.GIVEAWAY_CLAIMED.getValue());
+
+    // Domain service only handles core business logic
+    // Event publishing is handled at the application layer
+
+    return toyId;
   }
 
 }

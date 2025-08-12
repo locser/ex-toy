@@ -137,7 +137,7 @@ public interface ToyRepository {
    * @param status     Toy status
    * @return Number of toys in the campaign with the given status
    */
-  long countByCampaignIdAndStatus(Long campaignId, Integer status);
+  int countByCampaignIdAndStatus(Long campaignId, Integer status);
 
   /**
    * Batch update toys status by campaign ID.
@@ -192,4 +192,5 @@ public interface ToyRepository {
   Toy findRandomAvailableToyInCampaign(Long campaignId);
 
   void updateStatus(Long toyId, Integer status);
+
 }

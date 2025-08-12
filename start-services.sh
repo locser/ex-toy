@@ -43,7 +43,7 @@ check_docker() {
 # Build the application
 build_app() {
     print_header "Building x-toy application"
-    docker-compose build --no-cache
+    docker compose build --no-cache
     print_status "Application built successfully"
 }
 
@@ -53,13 +53,13 @@ start_services() {
 
     # Check if services are already running
     # grafana: admin/admin
-    if docker-compose ps | grep -q "Up"; then
+    if docker compose ps | grep -q "Up"; then
         print_warning "Some services are already running. Stopping them first..."
-        docker-compose down
+        docker compose down
     fi
 
     # Start services in background
-    docker-compose up -d
+    docker compose up -d
 
     print_status "Services started. Waiting for them to be ready..."
 
@@ -73,37 +73,76 @@ start_services() {
 # Stop all services
 stop_services() {
     print_header "Stopping x-toy services"
-    docker-compose down
+    docker compose down
     print_status "Services stopped"
 }
 
 # Restart all services
 restart_services() {
     print_header "Restarting x-toy services"
-    docker-compose restart
+    docker compose restart
     print_status "Services restarted"
 }
 
 # only start x-toy-app
 start_app() {
     print_header "Starting x-toy-app"
-    docker-compose up -d x-toy-app
+    docker compose up -d x-toy-app
     print_status "x-toy-app started"
+}
+
+# Start Kafka services only
+start_kafka() {
+    print_header "Starting Kafka services"
+    docker compose up -d kafka1 kafka-ui
+    print_status "Kafka services started"
+    
+    # Wait for Kafka to be ready
+    print_status "Waiting for Kafka to be ready..."
+    wait_for_kafka
+    print_status "Kafka is ready!"
+}
+
+# Stop Kafka services only
+stop_kafka() {
+    print_header "Stopping Kafka services"
+    docker compose stop kafka1 kafka-ui
+    print_status "Kafka services stopped"
+}
+
+# Wait for Kafka to be ready
+wait_for_kafka() {
+    local max_attempts=30
+    local attempt=1
+
+    while [ $attempt -le $max_attempts ]; do
+        if docker compose ps kafka1 | grep -q "healthy"; then
+            return 0
+        fi
+
+        echo -n "."
+        sleep 2
+        attempt=$((attempt + 1))
+    done
+
+    print_warning "Kafka may not be fully ready. Check with 'docker compose ps kafka1'"
 }
 
 # Show service status
 show_service_status() {
     print_header "Service Status"
-    docker-compose ps
+    docker compose ps
 
     echo ""
     print_status "Service URLs:"
     echo "  Application: http://localhost:1122"
     echo "  Health Check: http://localhost:1122/actuator/health"
+    echo "  Kafka UI: http://localhost:8080"
     echo "  Prometheus: http://localhost:9090"
     echo "  Grafana: http://localhost:3000"
     echo "  MySQL: localhost:3307"
     echo "  Redis: localhost:6379"
+    echo "  Kafka: localhost:9192"
     echo "  Elasticsearch: localhost:9200"
     echo "  Kibana: localhost:5601"
     echo "  Logstash: localhost:5044"
@@ -120,7 +159,7 @@ wait_for_services() {
     print_status "Waiting for services to be ready..."
 
     while [ $attempt -le $max_attempts ]; do
-        if docker-compose ps | grep -q "healthy"; then
+        if docker compose ps | grep -q "healthy"; then
             print_status "All services are healthy!"
             return 0
         fi
@@ -130,20 +169,20 @@ wait_for_services() {
         attempt=$((attempt + 1))
     done
 
-    print_warning "Some services may not be fully ready. Check with 'docker-compose ps'"
+    print_warning "Some services may not be fully ready. Check with 'docker compose ps'"
 }
 
 # Show logs
 show_logs() {
     local service=${1:-"x-toy-app"}
     print_header "Showing logs for $service"
-    docker-compose logs -f $service
+    docker compose logs -f $service
 }
 
 # Clean up everything
 cleanup() {
     print_header "Cleaning up all containers and volumes"
-    docker-compose down -v
+    docker compose down -v
     docker system prune -f
     print_status "Cleanup completed"
 }
@@ -156,8 +195,10 @@ show_help() {
     echo ""
     echo "Commands:"
     echo "  start       Start all services"
-    echo "  startapp    Start x-toy-app"
+    echo "  startapp    Start x-toy-app only"
+    echo "  startkafka  Start Kafka services only"
     echo "  stop        Stop all services"
+    echo "  stopkafka   Stop Kafka services only"
     echo "  restart     Restart all services"
     echo "  build       Build the application"
     echo "  status      Show service status"
@@ -167,7 +208,8 @@ show_help() {
     echo ""
     echo "Examples:"
     echo "  $0 start"
-    echo "  $0 logs mysql"
+    echo "  $0 startkafka"
+    echo "  $0 logs kafka1"
     echo "  $0 cleanup"
 }
 
@@ -183,8 +225,14 @@ main() {
         startapp)
             start_app
             ;;
+        startkafka)
+            start_kafka
+            ;;
         stop)
             stop_services
+            ;;
+        stopkafka)
+            stop_kafka
             ;;
         restart)
             restart_services

@@ -105,4 +105,28 @@ public class ToyEventProducer {
 
         return publishToyEvent(event);
     }
+
+    /**
+     * Creates and publishes a toy participation created event.
+     *
+     * @param toyId              ID of the toy
+     * @param userId             ID of the user who participated
+     * @param campaignId         ID of the campaign
+     * @param participationStatus Status of the participation
+     * @return A CompletableFuture that will be completed when the send operation
+     *         completes
+     */
+    public CompletableFuture<SendResult<String, Object>> publishParticipationCreatedEvent(Long toyId, Long userId,
+            Long campaignId, Integer participationStatus) {
+        ToyEvent event = ToyEvent.builder()
+                .eventType(ToyEvent.ToyEventType.PARTICIPATION_CREATED)
+                .toyId(toyId)
+                .userId(userId)
+                .campaignId(campaignId)
+                .participationStatus(participationStatus)
+                .timestamp(Instant.now())
+                .build();
+
+        return publishToyEvent(event);
+    }
 }

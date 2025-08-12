@@ -57,6 +57,11 @@ public class ToyEvent {
     private String additionalData;
     
     /**
+     * Participation status for participation events.
+     */
+    private Integer participationStatus;
+    
+    /**
      * Enum representing the types of toy events.
      */
     public enum ToyEventType {
@@ -65,6 +70,7 @@ public class ToyEvent {
         DELETED,
         STATUS_CHANGED,
         ADDED_TO_CAMPAIGN,
-        REMOVED_FROM_CAMPAIGN
+        REMOVED_FROM_CAMPAIGN,
+        PARTICIPATION_CREATED
     }
 }

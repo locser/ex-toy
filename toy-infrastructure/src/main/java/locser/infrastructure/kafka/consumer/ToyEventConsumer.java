@@ -1,10 +1,14 @@
 package locser.infrastructure.kafka.consumer;
 
+import java.time.LocalDateTime;
+
 import org.springframework.context.annotation.Profile;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Component;
 
 import locser.infrastructure.kafka.event.ToyEvent;
+import locser.toy.domain.model.entity.ToyParticipation;
+import locser.toy.domain.repository.ToyParticipationRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -18,7 +22,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class ToyEventConsumer {
 
-    // private final ToyDomainService toyDomainService;
+    private final ToyParticipationRepository toyParticipationRepository;
 
     /**
      * Listens for toy events on the toy-events topic.
@@ -48,6 +52,9 @@ public class ToyEventConsumer {
                 break;
             case REMOVED_FROM_CAMPAIGN:
                 processToyRemovedFromCampaignEvent(event);
+                break;
+            case PARTICIPATION_CREATED:
+                processParticipationCreatedEvent(event);
                 break;
             default:
                 log.warn("Unknown toy event type: {}", event.getEventType());
@@ -125,5 +132,45 @@ public class ToyEventConsumer {
                 event.getToyId(), event.getUserId(), event.getCampaignId());
 
         // Implement business logic for toy removed from campaign event
+    }
+
+    /**
+     * Processes a participation created event by creating the ToyParticipation
+     * record.
+     *
+     * @param event The participation created event
+     */
+    private void processParticipationCreatedEvent(ToyEvent event) {
+        System.out.println("processParticipationCreatedEvent Processing participation created event:");
+        log.info("Processing participation created event: toyId={}, userId={}, campaignId={}, status={}",
+                event.getToyId(), event.getUserId(), event.getCampaignId(), event.getParticipationStatus());
+
+        try {
+            // Create ToyParticipation record
+            ToyParticipation participation = new ToyParticipation();
+            participation.setUserId(event.getUserId());
+            participation.setToyId(event.getToyId());
+            participation.setCampaignId(event.getCampaignId());
+            participation.setStatus(event.getParticipationStatus());
+            participation.setParticipationDate(LocalDateTime.now());
+            participation.setCreatedAt(LocalDateTime.now());
+            participation.setUpdatedAt(LocalDateTime.now());
+
+            // Save the participation record
+            ToyParticipation savedParticipation = toyParticipationRepository.save(participation);
+
+            log.info("Successfully created participation record: id={}, userId={}, toyId={}, campaignId={}",
+                    savedParticipation.getId(), savedParticipation.getUserId(),
+                    savedParticipation.getToyId(), savedParticipation.getCampaignId());
+
+        } catch (Exception e) {
+            log.error("Failed to create participation record for event: toyId={}, userId={}, campaignId={}, error={}",
+                    event.getToyId(), event.getUserId(), event.getCampaignId(), e.getMessage(), e);
+
+            // In a production system, you might want to:
+            // 1. Send to a dead letter queue
+            // 2. Implement retry logic
+            // 3. Send notification to monitoring system
+        }
     }
 }

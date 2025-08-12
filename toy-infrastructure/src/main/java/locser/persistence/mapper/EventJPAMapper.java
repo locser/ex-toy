@@ -53,4 +53,7 @@ public interface EventJPAMapper extends JpaRepository<Event, Long> {
     @Modifying
     @Query("UPDATE Event e SET e.availableToys = e.availableToys - :count WHERE e.id = :campaignId AND e.availableToys > 0")
     void decrementAvailableToys(@Param("campaignId") Long campaignId, @Param("count") int count);
+
+    @Query("SELECT e FROM Event e WHERE e.id = :id AND e.type = :type AND e.status = :status")
+    Event findByIdAndTypeAndStatus(Long id, Integer type, Integer status);
 }

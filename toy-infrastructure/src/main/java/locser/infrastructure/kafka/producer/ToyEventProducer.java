@@ -40,7 +40,7 @@ public class ToyEventProducer {
             event.setTimestamp(Instant.now());
         }
 
-        log.info("Publishing toy event: {}", event);
+        // log.info("Publishing toy event: {}", event);
 
         // Use the toy ID as the key for partitioning
         String key = event.getToyId().toString();
@@ -51,7 +51,8 @@ public class ToyEventProducer {
         // Add callback for logging
         future.whenComplete((result, ex) -> {
             if (ex == null) {
-                log.info("Sent toy event=[{}] with offset=[{}]", event, result.getRecordMetadata().offset());
+                // log.info("Sent toy event=[{}] with offset=[{}]", event,
+                // result.getRecordMetadata().offset());
             } else {
                 log.error("Unable to send toy event=[{}] due to : {}", event, ex.getMessage(), ex);
             }
@@ -109,9 +110,9 @@ public class ToyEventProducer {
     /**
      * Creates and publishes a toy participation created event.
      *
-     * @param toyId              ID of the toy
-     * @param userId             ID of the user who participated
-     * @param campaignId         ID of the campaign
+     * @param toyId               ID of the toy
+     * @param userId              ID of the user who participated
+     * @param campaignId          ID of the campaign
      * @param participationStatus Status of the participation
      * @return A CompletableFuture that will be completed when the send operation
      *         completes

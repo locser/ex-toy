@@ -1,0 +1,70 @@
+spring:
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:kafka1:9092}
+    consumer:
+      group-id: toy-exchange
+      auto-offset-reset: earliest
+      key-deserializer: org.springframework.kafka.support.serializer.ErrorHandlingDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.ErrorHandlingDeserializer
+      properties:
+        spring.json.trusted.packages: "locser.toy.domain.model.*,locser.infrastructure.kafka.event.*"
+        # Cấu hình ErrorHandlingDeserializer
+        spring.deserializer.key.delegate.class: org.apache.kafka.common.serialization.StringDeserializer
+        spring.deserializer.value.delegate.class: org.springframework.kafka.support.serializer.JsonDeserializer
+        spring.json.value.default.type: locser.infrastructure.kafka.event.ToyEvent
+        spring.json.type.mapping: "toyEvent:locser.infrastructure.kafka.event.ToyEvent"
+        # Giảm thời gian retry connection
+        reconnect.backoff.ms: 1000
+        reconnect.backoff.max.ms: 5000
+        retry.backoff.ms: 500
+        request.timeout.ms: 10000
+        connections.max.idle.ms: 30000
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      acks: all
+      retries: 1
+      properties:
+        # Giảm thời gian retry connection cho producer
+        reconnect.backoff.ms: 1000
+        reconnect.backoff.max.ms: 5000
+        retry.backoff.ms: 500
+        request.timeout.ms: 10000
+    topics:
+      toy-events: toy-events
+      exchange-events: exchange-events
+      add-participant-events: add-participant-events
+
+  #DBS - Docker configuration
+  datasource:
+    url: ${DB_URL:jdbc:mysql://mysql:3306/java_demo?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC}
+    username: ${DB_USERNAME:root}
+    password: ${DB_PASSWORD:password}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    # i want set max pool size to 200
+    hikari:
+      maximum-pool-size: 200
+      minimum-idle: 10
+
+  # Redis - Docker configuration
+  data:
+    redis:
+      host: ${REDIS_HOST:redis}
+      port: 6379
+      password: ${REDIS_PASSWORD:GNwHez7OT53ftK5Ui3IOOlg1jUMwKT5}
+      database: 0
+      lettuce:
+        pool:
+          max-active: 8
+          max-idle: 8
+          min-idle: 0
+          max-wait: -1ms
+      connect-timeout: 30000
+
+logging:
+  level:
+    locser.controller: INFO
+    org.hibernate.SQL: INFO
+    org.hibernate.type: INFO
+    org.hibernate.type.descriptor.sql.BasicBinder: INFO
+    org.hibernate.engine.internal.StatisticalLoggingSessionEventListener: OFF

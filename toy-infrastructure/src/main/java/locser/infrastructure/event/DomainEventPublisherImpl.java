@@ -62,9 +62,10 @@ public class DomainEventPublisherImpl implements DomainEventPublisher {
                         event.getCampaignId(),
                         event.getParticipationStatus()).whenComplete((result, ex) -> {
                             if (ex == null) {
-                                log.info(
-                                        "Successfully sent participation event to Kafka: toyId={}, userId={}, campaignId={}",
-                                        event.getToyId(), event.getUserId(), event.getCampaignId());
+                                // log.info(
+                                // "Successfully sent participation event to Kafka: toyId={}, userId={},
+                                // campaignId={}",
+                                // event.getToyId(), event.getUserId(), event.getCampaignId());
                             } else {
                                 log.error(
                                         "Failed to send participation event to Kafka, falling back to direct DB save: toyId={}, userId={}, campaignId={}, error={}",
@@ -73,7 +74,8 @@ public class DomainEventPublisherImpl implements DomainEventPublisher {
                                 createParticipationDirectly(event);
                             }
                         });
-                System.out.println("handleParticipationCreatedEvent Sent participation event to Kafka");
+                // System.out.println("handleParticipationCreatedEvent Sent participation event
+                // to Kafka");
             } catch (Exception e) {
                 log.error(
                         "Exception while sending to Kafka, falling back to direct DB save: toyId={}, userId={}, campaignId={}, error={}",

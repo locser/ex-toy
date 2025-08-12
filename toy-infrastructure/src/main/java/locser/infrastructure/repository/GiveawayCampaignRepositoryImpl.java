@@ -6,6 +6,7 @@ import java.util.Set;
 
 import org.springframework.stereotype.Repository;
 
+import locser.infrastructure.cache.LocalCampaignCache;
 import locser.infrastructure.cache.RedisGiveawayCampaignCache;
 import locser.toy.domain.model.entity.Event;
 import locser.toy.domain.model.entity.Toy;
@@ -25,6 +26,7 @@ public class GiveawayCampaignRepositoryImpl implements GiveawayCampaignRepositor
   private final ToyRepository toyRepository;
   private final ToyParticipationRepository toyParticipationRepository;
   private final RedisGiveawayCampaignCache redisCache;
+  private final LocalCampaignCache localCache;
 
   public int getAvailableToysCount(Long campaignId) {
 
@@ -46,15 +48,29 @@ public class GiveawayCampaignRepositoryImpl implements GiveawayCampaignRepositor
   }
 
   public Event findById(Long id) {
-    Event cachedCampaign = redisCache.getCachedCampaign(id);
-    if (cachedCampaign != null) {
-      return cachedCampaign;
+    // 1. Try local cache first (15s TTL)
+    Event localCachedCampaign = localCache.getCampaign(id);
+    if (localCachedCampaign != null) {
+      return localCachedCampaign;
     }
 
-    // If not in Redis, get from database
+    // 2. Try Redis cache
+    Event redisCachedCampaign = redisCache.getCachedCampaign(id);
+    if (redisCachedCampaign != null) {
+      // Cache in local for next time
+      localCache.putCampaign(id, redisCachedCampaign);
+      return redisCachedCampaign;
+    }
+
+    // 3. If not in any cache, get from database
     Event campaign = eventRepository.findOneById(id).orElse(null);
 
-    redisCache.cacheCampaign(id, campaign);
+    // Cache in both Redis and local
+    if (campaign != null) {
+      redisCache.cacheCampaign(id, campaign);
+      localCache.putCampaign(id, campaign);
+    }
+    
     return campaign;
   }
 

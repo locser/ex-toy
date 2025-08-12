@@ -2,12 +2,14 @@ package locser.persistence.repository;
 
 import java.util.List;
 import java.util.Optional;
-import locser.persistence.mapper.ToyParticipationJPAMapper;
-import locser.toy.domain.model.entity.ToyParticipation;
-import locser.toy.domain.repository.ToyParticipationRepository;
+
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+
+import locser.persistence.mapper.ToyParticipationJPAMapper;
+import locser.toy.domain.model.entity.ToyParticipation;
+import locser.toy.domain.repository.ToyParticipationRepository;
 
 /**
  * Implementation of ToyParticipationRepository using JPA.
@@ -85,5 +87,11 @@ public class ToyParticipationInfrasRepositoryImpl implements ToyParticipationRep
   public List<ToyParticipation> findByCampaignIdAndStatus(Long campaignId, Integer status) {
     System.out.println("ToyParticipationInfrasRepositoryImpl findByCampaignIdAndStatus");
     return toyParticipationJPAMapper.findByCampaignIdAndStatus(campaignId, status);
+  }
+
+  @Override
+  public List<ToyParticipation> saveAll(List<ToyParticipation> participations) {
+    System.out.println("ToyParticipationInfrasRepositoryImpl saveAll");
+    return toyParticipationJPAMapper.saveAll(participations);
   }
 }

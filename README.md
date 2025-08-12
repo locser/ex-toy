@@ -236,4 +236,4 @@ giải pháp của tôi:
 - tăng số lượng kết nối tối đa
 - tách việc lưu database người dùng ra luồng mới, có thể nhận -> gửi kafka -> xử lý -> lưu database
 -      maximum-pool-size: 100 # Số lượng tối đa kết nối
-- chạy ổn với 3500 req/s
+- chạy ổn với 3500 req/s (vẫn chưa ok)

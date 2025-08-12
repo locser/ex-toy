@@ -2,6 +2,7 @@ package locser.toy.domain.repository;
 
 import java.util.List;
 import java.util.Optional;
+
 import locser.toy.domain.model.entity.ToyParticipation;
 
 /**
@@ -13,7 +14,8 @@ public interface ToyParticipationRepository {
    * Find a toy participation by its ID.
    *
    * @param id The ID of the toy participation
-   * @return An Optional containing the toy participation if found, or empty if not found
+   * @return An Optional containing the toy participation if found, or empty if
+   *         not found
    */
   Optional<ToyParticipation> findOneById(Long id);
 
@@ -94,4 +96,6 @@ public interface ToyParticipationRepository {
    * @return List of toy participations matching the criteria
    */
   List<ToyParticipation> findByCampaignIdAndStatus(Long campaignId, Integer status);
+
+  List<ToyParticipation> saveAll(List<ToyParticipation> participations);
 }

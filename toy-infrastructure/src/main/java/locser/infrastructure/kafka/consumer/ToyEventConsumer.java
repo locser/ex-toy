@@ -1,9 +1,14 @@
 package locser.infrastructure.kafka.consumer;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.springframework.context.annotation.Profile;
 import org.springframework.kafka.annotation.KafkaListener;
+import org.springframework.kafka.support.KafkaHeaders;
+import org.springframework.messaging.handler.annotation.Header;
+import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.stereotype.Component;
 
 import locser.infrastructure.kafka.event.ToyEvent;
@@ -25,15 +30,51 @@ public class ToyEventConsumer {
     private final ToyParticipationRepository toyParticipationRepository;
 
     /**
-     * Listens for toy events on the toy-events topic.
+     * Listens for toy events on the toy-events topic - BATCH PROCESSING (20
+     * messages).
      *
-     * @param event The toy event received from Kafka
+     * @param events     List of toy events received from Kafka
+     * @param partitions Partition information
+     * @param offsets    Offset information
      */
-    @KafkaListener(topics = "${spring.kafka.topics.toy-events:toy-events}", groupId = "${spring.kafka.consumer.group-id:toy-exchange}")
-    public void consumeToyEvent(ToyEvent event) {
-        log.info("Received toy event: {}", event);
+    @KafkaListener(topics = "${spring.kafka.topics.toy-events:toy-events}", groupId = "${spring.kafka.consumer.group-id:toy-exchange}", containerFactory = "kafkaListenerContainerFactory")
+    public void consumeToyEventsBatch(
+            @Payload List<ToyEvent> events,
+            @Header(KafkaHeaders.RECEIVED_PARTITION) List<Integer> partitions,
+            @Header(KafkaHeaders.OFFSET) List<Long> offsets) {
 
-        // Process the event based on its type
+        // log.info("Received batch of {} toy events", events.size());
+
+        // Group events by type for efficient batch processing
+        List<ToyEvent> participationEvents = new ArrayList<>();
+        List<ToyEvent> otherEvents = new ArrayList<>();
+
+        for (ToyEvent event : events) {
+            if (event.getEventType() == ToyEvent.ToyEventType.PARTICIPATION_CREATED) {
+                participationEvents.add(event);
+            } else {
+                otherEvents.add(event);
+            }
+        }
+
+        // Batch process participation events (most important for performance)
+        if (!participationEvents.isEmpty()) {
+            processParticipationCreatedEventsBatch(participationEvents);
+        }
+
+        // Process other events individually (less frequent)
+        for (ToyEvent event : otherEvents) {
+            processIndividualEvent(event);
+        }
+
+        log.info("Successfully processed batch: {} participation events, {} other events",
+                participationEvents.size(), otherEvents.size());
+    }
+
+    /**
+     * Process individual non-participation events
+     */
+    private void processIndividualEvent(ToyEvent event) {
         switch (event.getEventType()) {
             case CREATED:
                 processToyCreatedEvent(event);
@@ -52,9 +93,6 @@ public class ToyEventConsumer {
                 break;
             case REMOVED_FROM_CAMPAIGN:
                 processToyRemovedFromCampaignEvent(event);
-                break;
-            case PARTICIPATION_CREATED:
-                processParticipationCreatedEvent(event);
                 break;
             default:
                 log.warn("Unknown toy event type: {}", event.getEventType());
@@ -135,16 +173,55 @@ public class ToyEventConsumer {
     }
 
     /**
-     * Processes a participation created event by creating the ToyParticipation
-     * record.
+     * Processes a batch of participation created events - BATCH PROCESSING for
+     * better performance.
+     *
+     * @param events List of participation created events
+     */
+    private void processParticipationCreatedEventsBatch(List<ToyEvent> events) {
+        log.info("Processing batch of {} participation events", events.size());
+
+        try {
+            // Create list of ToyParticipation records for batch insert
+            List<ToyParticipation> participations = new ArrayList<>();
+            LocalDateTime now = LocalDateTime.now();
+
+            for (ToyEvent event : events) {
+                ToyParticipation participation = new ToyParticipation();
+                participation.setUserId(event.getUserId());
+                participation.setToyId(event.getToyId());
+                participation.setCampaignId(event.getCampaignId());
+                participation.setStatus(event.getParticipationStatus());
+                participation.setParticipationDate(now);
+                participation.setCreatedAt(now);
+                participation.setUpdatedAt(now);
+
+                participations.add(participation);
+            }
+
+            // Batch save all participation records
+            List<ToyParticipation> savedParticipations = toyParticipationRepository.saveAll(participations);
+
+            log.info("Successfully created {} participation records in batch", savedParticipations.size());
+
+        } catch (Exception e) {
+            log.error(
+                    "Failed to create participation records in batch, falling back to individual processing. Error: {}",
+                    e.getMessage(), e);
+
+            // Fallback: process individually if batch fails
+            for (ToyEvent event : events) {
+                processParticipationCreatedEvent(event);
+            }
+        }
+    }
+
+    /**
+     * Processes a single participation created event (fallback method).
      *
      * @param event The participation created event
      */
     private void processParticipationCreatedEvent(ToyEvent event) {
-        System.out.println("processParticipationCreatedEvent Processing participation created event:");
-        log.info("Processing participation created event: toyId={}, userId={}, campaignId={}, status={}",
-                event.getToyId(), event.getUserId(), event.getCampaignId(), event.getParticipationStatus());
-
         try {
             // Create ToyParticipation record
             ToyParticipation participation = new ToyParticipation();
@@ -159,7 +236,7 @@ public class ToyEventConsumer {
             // Save the participation record
             ToyParticipation savedParticipation = toyParticipationRepository.save(participation);
 
-            log.info("Successfully created participation record: id={}, userId={}, toyId={}, campaignId={}",
+            log.debug("Successfully created participation record: id={}, userId={}, toyId={}, campaignId={}",
                     savedParticipation.getId(), savedParticipation.getUserId(),
                     savedParticipation.getToyId(), savedParticipation.getCampaignId());
 

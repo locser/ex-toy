@@ -261,7 +261,6 @@ public interface ToyJPAMapper extends JpaRepository<Toy, Long>, JpaSpecification
                         @Param("status") Integer status);
 
         @Modifying
-        @Transactional
         @Query("UPDATE Toy t SET t.status = :status WHERE t.id = :toyId")
         void updateStatus(Long toyId, Integer status);
 

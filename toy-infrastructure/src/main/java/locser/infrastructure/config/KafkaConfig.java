@@ -115,12 +115,20 @@ public class KafkaConfig {
     }
 
     /**
-     * Kafka listener container factory for consuming messages.
+     * Kafka listener container factory for consuming messages with BATCH PROCESSING.
      */
     @Bean
     public ConcurrentKafkaListenerContainerFactory<String, Object> kafkaListenerContainerFactory() {
         ConcurrentKafkaListenerContainerFactory<String, Object> factory = new ConcurrentKafkaListenerContainerFactory<>();
         factory.setConsumerFactory(consumerFactory());
+        
+        // Enable batch processing
+        factory.setBatchListener(true);
+        
+        // Configure batch settings
+        factory.getContainerProperties().setPollTimeout(3000); // 3 seconds timeout
+        factory.setConcurrency(3); // Number of consumer threads
+        
         return factory;
     }
 }

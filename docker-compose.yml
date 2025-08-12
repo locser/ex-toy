@@ -108,7 +108,7 @@ services:
       DB_PASSWORD: password
       REDIS_HOST: redis
       REDIS_PASSWORD: GNwHez7OT53ftK5Ui3IOOlg1jUMwKT5
-      KAFKA_BOOTSTRAP_SERVERS: localhost:9192
+      KAFKA_BOOTSTRAP_SERVERS: kafka1:9092
       JAVA_OPTS: -server -Xms512m -Xmx1536m -XX:+UseG1GC -XX:+UseContainerSupport -XX:MaxGCPauseMillis=200 -XX:+ExitOnOutOfMemoryError -Dspring.profiles.active=docker,kafka
       SPRING_PROFILES_ACTIVE: docker,kafka
     volumes:

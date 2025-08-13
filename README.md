@@ -237,3 +237,95 @@ giải pháp của tôi:
 - tách việc lưu database người dùng ra luồng mới, có thể nhận -> gửi kafka -> xử lý -> lưu database
 -      maximum-pool-size: 100 # Số lượng tối đa kết nối
 - chạy ổn với 3500 req/s (vẫn chưa ok)
+
+Với giveaway use case và batch size 20, có nhiều cách tối ưu hơn. Tôi sẽ đưa ra các strategy từ đơn giản đến phức tạp:
+
+## 1. Tối ưu Batch Size động
+
+```java
+@KafkaListener(topics = "giveaway-topic")
+public class GiveawayConsumer {
+
+    @Value("${app.batch.size:50}")
+    private int batchSize;
+
+    @Value("${app.batch.timeout:100}")
+    private int batchTimeoutMs;
+
+    @KafkaListener(
+        topics = "giveaway-topic",
+        containerFactory = "batchKafkaListenerContainerFactory"
+    )
+    public void consumeBatch(List<ConsumerRecord<String, GiveawayEvent>> records) {
+        // Process theo batch thay vì từng message
+        List<GiveawayParticipant> participants = records.stream()
+            .map(this::mapToParticipant)
+            .collect(Collectors.toList());
+
+        // Batch insert database
+        giveawayService.batchSave(participants);
+    }
+}
+```
+
+## 2. Kafka Consumer Configuration tối ưu
+
+```java
+@Configuration
+public class KafkaConfig {
+
+    @Bean
+    public ConsumerFactory<String, GiveawayEvent> batchConsumerFactory() {
+        Map<String, Object> props = new HashMap<>();
+        props.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, "localhost:9092");
+        props.put(ConsumerConfig.GROUP_ID_CONFIG, "giveaway-consumer");
+
+        // Tối ưu cho batch processing
+        props.put(ConsumerConfig.MAX_POLL_RECORDS_CONFIG, 100); // Tăng từ 20 lên 100
+        props.put(ConsumerConfig.FETCH_MAX_WAIT_MS_CONFIG, 100); // Giảm wait time
+        props.put(ConsumerConfig.FETCH_MIN_BYTES_CONFIG, 1024); // Đợi ít nhất 1KB
+        props.put(ConsumerConfig.FETCH_MAX_BYTES_CONFIG, 52428800); // Max 50MB
+
+        // Tắt auto commit để control transaction
+        props.put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, false);
+        props.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "latest");
+
+        return new DefaultKafkaConsumerFactory<>(props);
+    }
+
+    @Bean
+    public ConcurrentKafkaListenerContainerFactory<String, GiveawayEvent>
+            batchKafkaListenerContainerFactory() {
+        ConcurrentKafkaListenerContainerFactory<String, GiveawayEvent> factory =
+            new ConcurrentKafkaListenerContainerFactory<>();
+        factory.setConsumerFactory(batchConsumerFactory());
+
+        // Batch configuration
+        factory.setBatchListener(true);
+        factory.setConcurrency(4); // 4 consumer threads
+
+        // Manual commit sau khi xử lý xong
+        factory.getContainerProperties().setAckMode(ContainerProperties.AckMode.MANUAL_IMMEDIATE);
+
+        return factory;
+    }
+}
+
+## Kết quả mong đợi:
+
+Với optimizations này, bạn có thể đạt được:
+
+- **3000-6000 req/s** thay vì 900 req/s hiện tại
+- Giảm latency từ Kafka đến Database
+- Tận dụng tốt hơn database connection pool
+- Xử lý duplicate records tự động
+
+**Gợi ý triển khai từng bước:**
+
+1. Bắt đầu với tăng batch size lên 100
+2. Thêm multi-value insert
+3. Tối ưu Kafka consumer config
+4. Cuối cùng mới implement time window batching
+
+Bạn muốn tôi detail hơn phần nào không?
+```

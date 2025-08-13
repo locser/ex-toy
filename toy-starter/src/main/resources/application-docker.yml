@@ -43,7 +43,7 @@ spring:
     driver-class-name: com.mysql.cj.jdbc.Driver
     # i want set max pool size to 200
     hikari:
-      maximum-pool-size: 200
+      maximum-pool-size: 50
       minimum-idle: 10
 
   # Redis - Docker configuration

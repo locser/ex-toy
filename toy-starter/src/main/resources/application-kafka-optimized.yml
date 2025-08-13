@@ -1,0 +1,61 @@
+# ## Kafka Optimization Configuration ##
+# Cấu hình tối ưu cho Kafka với Dynamic Batch Size và Consumer Configuration
+
+spring:
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+    
+    # Consumer Configuration
+    consumer:
+      group-id: ${KAFKA_CONSUMER_GROUP_ID:toy-exchange-optimized}
+      auto-offset-reset: earliest
+      enable-auto-commit: false  # Manual commit for better control
+      
+    # Topics Configuration  
+    topics:
+      toy-events: ${KAFKA_TOPIC_TOY_EVENTS:toy-events}
+      exchange-events: ${KAFKA_TOPIC_EXCHANGE_EVENTS:exchange-events}
+
+# ## 1. Batch Size Configuration - Static ##
+
+  # ## 2. Kafka Consumer Configuration tối ưu - Advanced Consumer Settings ##
+  consumer:
+    # Fetch Configuration - Optimize network round trips
+    fetch-min-size: ${KAFKA_FETCH_MIN_SIZE:1024}        # Minimum 1KB per fetch
+    fetch-max-wait: ${KAFKA_FETCH_MAX_WAIT:500}         # Maximum 500ms wait time
+    max-poll-records: ${KAFKA_MAX_POLL_RECORDS:500}     # Maximum 500 records per poll
+    
+    # Session Management - Optimize consumer group stability  
+    session-timeout: ${KAFKA_SESSION_TIMEOUT:30000}     # 30 seconds session timeout
+    heartbeat-interval: ${KAFKA_HEARTBEAT_INTERVAL:10000}  # 10 seconds heartbeat interval
+    max-poll-interval: ${KAFKA_MAX_POLL_INTERVAL:300000}   # 5 minutes max poll interval
+    
+    # Threading and Concurrency
+    concurrency: ${KAFKA_CONSUMER_CONCURRENCY:3}        # Number of consumer threads
+    
+    # Offset Management
+    auto-offset-reset: ${KAFKA_AUTO_OFFSET_RESET:earliest}
+    enable-auto-commit: ${KAFKA_ENABLE_AUTO_COMMIT:false}  # Manual commit for better control
+
+# Logging Configuration for Kafka
+logging:
+  level:
+    locser.infrastructure.kafka: ${KAFKA_LOG_LEVEL:INFO}
+    org.apache.kafka: ${KAFKA_APACHE_LOG_LEVEL:WARN}
+    org.springframework.kafka: ${KAFKA_SPRING_LOG_LEVEL:INFO}
+
+# Monitoring and Metrics
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+    tags:
+      application: toy-exchange
+      service: kafka-consumer
+
+# Performance Monitoring - DISABLED

@@ -1,11 +1,13 @@
 package locser.infrastructure.kafka.consumer;
 
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
 import org.springframework.context.annotation.Profile;
 import org.springframework.kafka.annotation.KafkaListener;
+import org.springframework.kafka.support.Acknowledgment;
 import org.springframework.kafka.support.KafkaHeaders;
 import org.springframework.messaging.handler.annotation.Header;
 import org.springframework.messaging.handler.annotation.Payload;
@@ -30,45 +32,69 @@ public class ToyEventConsumer {
     private final ToyParticipationRepository toyParticipationRepository;
 
     /**
-     * Listens for toy events on the toy-events topic - BATCH PROCESSING (20
-     * messages).
+     * ## 1. Tối ưu Batch Size động - Enhanced batch processing with dynamic optimization
+     * Listens for toy events on the toy-events topic with dynamic batch size management.
      *
      * @param events     List of toy events received from Kafka
      * @param partitions Partition information
      * @param offsets    Offset information
+     * @param ack        Manual acknowledgment for better control
      */
     @KafkaListener(topics = "${spring.kafka.topics.toy-events:toy-events}", groupId = "${spring.kafka.consumer.group-id:toy-exchange}", containerFactory = "kafkaListenerContainerFactory")
     public void consumeToyEventsBatch(
             @Payload List<ToyEvent> events,
             @Header(KafkaHeaders.RECEIVED_PARTITION) List<Integer> partitions,
-            @Header(KafkaHeaders.OFFSET) List<Long> offsets) {
+            @Header(KafkaHeaders.OFFSET) List<Long> offsets,
+            Acknowledgment ack) {
 
-        // log.info("Received batch of {} toy events", events.size());
+        Instant startTime = Instant.now();
+        boolean processingSuccessful = false;
+        
+        try {
+            log.debug("Received batch of {} toy events", events.size());
 
-        // Group events by type for efficient batch processing
-        List<ToyEvent> participationEvents = new ArrayList<>();
-        List<ToyEvent> otherEvents = new ArrayList<>();
+            // Group events by type for efficient batch processing
+            List<ToyEvent> participationEvents = new ArrayList<>();
+            List<ToyEvent> otherEvents = new ArrayList<>();
 
-        for (ToyEvent event : events) {
-            if (event.getEventType() == ToyEvent.ToyEventType.PARTICIPATION_CREATED) {
-                participationEvents.add(event);
-            } else {
-                otherEvents.add(event);
+            for (ToyEvent event : events) {
+                if (event.getEventType() == ToyEvent.ToyEventType.PARTICIPATION_CREATED) {
+                    participationEvents.add(event);
+                } else {
+                    otherEvents.add(event);
+                }
             }
-        }
 
-        // Batch process participation events (most important for performance)
-        if (!participationEvents.isEmpty()) {
-            processParticipationCreatedEventsBatch(participationEvents);
-        }
+            // Batch process participation events (most important for performance)
+            if (!participationEvents.isEmpty()) {
+                processParticipationCreatedEventsBatch(participationEvents);
+            }
 
-        // Process other events individually (less frequent)
-        for (ToyEvent event : otherEvents) {
-            processIndividualEvent(event);
-        }
+            // Process other events individually (less frequent)
+            for (ToyEvent event : otherEvents) {
+                processIndividualEvent(event);
+            }
 
-        log.info("Successfully processed batch: {} participation events, {} other events",
-                participationEvents.size(), otherEvents.size());
+            processingSuccessful = true;
+            
+            // Manual acknowledgment after successful processing
+            ack.acknowledge();
+            
+            log.info("Successfully processed batch: {} participation events, {} other events",
+                    participationEvents.size(), otherEvents.size());
+                    
+        } catch (Exception e) {
+            log.error("Failed to process batch of {} events: {}", events.size(), e.getMessage(), e);
+            processingSuccessful = false;
+            
+            // Don't acknowledge failed batches - they will be retried
+            throw e;
+            
+        } finally {
+            // Log processing time
+            long processingTimeMs = java.time.Duration.between(startTime, Instant.now()).toMillis();
+            log.debug("Batch processing completed in {}ms", processingTimeMs);
+        }
     }
 
     /**

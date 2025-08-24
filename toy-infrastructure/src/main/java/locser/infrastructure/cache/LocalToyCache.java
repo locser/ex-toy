@@ -6,16 +6,13 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import org.springframework.stereotype.Component;
 
-import locser.toy.domain.model.entity.Event;
+import locser.toy.domain.model.entity.Toy;
 import lombok.extern.slf4j.Slf4j;
 
-/**
- * Local in-memory cache for campaigns with TTL (Time To Live) support.
- * Cache expires after 15 seconds.
- */
 @Component
 @Slf4j
-public class LocalCampaignCache {
+public class LocalToyCache {
+    // TODO: nhận quà xong cần xoá local cache của toy đó
 
     private static final int CACHE_TTL_SECONDS = 15;
 
@@ -25,11 +22,11 @@ public class LocalCampaignCache {
      * Cache entry with TTL support
      */
     private static class CacheEntry {
-        private final Event campaign;
+        private final Toy toy;
         private final LocalDateTime expiryTime;
 
-        public CacheEntry(Event campaign) {
-            this.campaign = campaign;
+        public CacheEntry(Toy toy) {
+            this.toy = toy;
             this.expiryTime = LocalDateTime.now().plusSeconds(CACHE_TTL_SECONDS);
         }
 
@@ -37,56 +34,56 @@ public class LocalCampaignCache {
             return LocalDateTime.now().isAfter(expiryTime);
         }
 
-        public Event getCampaign() {
-            return campaign;
+        public Toy getToy() {
+            return toy;
         }
     }
 
     /**
-     * Get campaign from local cache
+     * Get toy from local cache
      *
-     * @param campaignId Campaign ID
-     * @return Campaign if exists and not expired, null otherwise
+     * @param toyId toy ID
+     * @return toy if exists and not expired, null otherwise
      */
-    public Event getCampaign(Long campaignId) {
-        CacheEntry entry = cache.get(campaignId);
+    public Toy getToy(Long toyId) {
+        CacheEntry entry = cache.get(toyId);
 
         if (entry == null) {
-            log.debug("Campaign {} not found in local cache", campaignId);
+            log.debug("toy {} not found in local cache", toyId);
             return null;
         }
 
         if (entry.isExpired()) {
-            log.debug("Campaign {} expired in local cache, removing", campaignId);
-            cache.remove(campaignId);
+            log.debug("toy {} expired in local cache, removing", toyId);
+            cache.remove(toyId);
             return null;
         }
 
-        log.debug("Campaign {} found in local cache", campaignId);
-        return entry.getCampaign();
+        log.debug("toy {} found in local cache", toyId);
+        return entry.getToy();
     }
 
     /**
-     * Put campaign into local cache
+     * Put toy into local cache
      *
-     * @param campaignId Campaign ID
-     * @param campaign   Campaign object
+     * @param toyId toy ID
+     * @param toy   toy object
      */
-    public void putCampaign(Long campaignId, Event campaign) {
-        if (campaign != null) {
-            cache.put(campaignId, new CacheEntry(campaign));
-            log.debug("Campaign {} cached locally for {} seconds", campaignId, CACHE_TTL_SECONDS);
+    public void putToy(Long toyId, Toy toy) {
+        if (toy != null) {
+            cache.put(toyId, new CacheEntry(toy));
+            log.debug("toy {} cached locally for {} seconds", toyId, CACHE_TTL_SECONDS);
         }
     }
 
     /**
-     * Remove campaign from local cache
+     * Remove toy from local cache
      *
-     * @param campaignId Campaign ID
+     * @param toyId toy ID
      */
-    public void removeCampaign(Long campaignId) {
-        cache.remove(campaignId);
-        log.debug("Campaign {} removed from local cache", campaignId);
+    public void removeToy(Long toyId) {
+        cache.remove(toyId);
+        log.debug("toy {} removed from local cache", toyId);
     }
 
     /**
@@ -96,7 +93,7 @@ public class LocalCampaignCache {
         cache.entrySet().removeIf(entry -> {
             boolean expired = entry.getValue().isExpired();
             if (expired) {
-                log.debug("Removing expired campaign {} from local cache", entry.getKey());
+                log.debug("Removing expired toy {} from local cache", entry.getKey());
             }
             return expired;
         });
@@ -121,6 +118,6 @@ public class LocalCampaignCache {
      */
     public void clearAll() {
         cache.clear();
-        log.info("Local campaign cache cleared");
+        log.info("Local toy cache cleared");
     }
 }

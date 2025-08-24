@@ -51,7 +51,7 @@ public class DomainEventPublisherImpl implements DomainEventPublisher {
     }
 
     private void handleParticipationCreatedEvent(ParticipationCreatedEvent event) {
-        log.info("Handling ParticipationCreatedEvent: {}", event);
+        // log.info("Handling ParticipationCreatedEvent: {}", event);
 
         // Try to send via Kafka if available
         if (toyEventProducer != null) {
@@ -84,8 +84,9 @@ public class DomainEventPublisherImpl implements DomainEventPublisher {
                 createParticipationDirectly(event);
             }
         } else {
-            log.info("Kafka not available, creating participation record directly: toyId={}, userId={}, campaignId={}",
-                    event.getToyId(), event.getUserId(), event.getCampaignId());
+            // log.info("Kafka not available, creating participation record directly:
+            // toyId={}, userId={}, campaignId={}",
+            // event.getToyId(), event.getUserId(), event.getCampaignId());
             // Kafka is not available, create participation record directly
             System.out.println("Kafka not available, creating participation record directly NOT KAFKA");
             createParticipationDirectly(event);
@@ -103,10 +104,12 @@ public class DomainEventPublisherImpl implements DomainEventPublisher {
             participation.setCreatedAt(LocalDateTime.now());
             participation.setUpdatedAt(LocalDateTime.now());
 
-            ToyParticipation savedParticipation = toyParticipationRepository.save(participation);
-            log.info("Successfully created participation record directly: id={}, toyId={}, userId={}, campaignId={}",
-                    savedParticipation.getId(), savedParticipation.getToyId(),
-                    savedParticipation.getUserId(), savedParticipation.getCampaignId());
+            // ToyParticipation savedParticipation =
+            toyParticipationRepository.save(participation);
+            // log.info("Successfully created participation record directly: id={},
+            // toyId={}, userId={}, campaignId={}",
+            // savedParticipation.getId(), savedParticipation.getToyId(),
+            // savedParticipation.getUserId(), savedParticipation.getCampaignId());
         } catch (Exception e) {
             log.error("Failed to create participation record directly: toyId={}, userId={}, campaignId={}, error={}",
                     event.getToyId(), event.getUserId(), event.getCampaignId(), e.getMessage(), e);

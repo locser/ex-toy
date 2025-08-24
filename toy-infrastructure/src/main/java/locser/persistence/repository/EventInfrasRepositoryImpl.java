@@ -159,6 +159,7 @@ public class EventInfrasRepositoryImpl implements EventRepository {
 
   @Override
   public Event findByIdAndTypeAndStatus(Long id, Integer type, Integer status) {
+    System.out.println("EventInfrasRepositoryImpl findByIdAndTypeAndStatus: " + id + " " + type + " " + status);
     return eventJPAMapper.findByIdAndTypeAndStatus(id, type, status);
   }
 }

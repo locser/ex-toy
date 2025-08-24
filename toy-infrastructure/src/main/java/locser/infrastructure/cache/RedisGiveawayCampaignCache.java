@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import locser.toy.domain.model.entity.Event;
+import locser.toy.domain.model.entity.Toy;
 
 @Service
 public class RedisGiveawayCampaignCache {
@@ -19,6 +20,8 @@ public class RedisGiveawayCampaignCache {
   private static final long CAMPAIGN_CACHE_TTL = 24; // 24 hours
   private static final long USER_PARTICIPATION_CACHE_TTL = 7; // 7 days
   private static final String AVAILABLE_TOYS_COUNT_KEY_PREFIX = "campaign:toys:count:";
+  private static final String TOY_KEY_PREFIX = "toy:";
+  private static final long TOY_CACHE_TTL = 3 * 60 * 60; // 3 hours
 
   private final RedisTemplate<String, Object> redisTemplate;
 
@@ -137,6 +140,7 @@ public class RedisGiveawayCampaignCache {
   public void removeToyIdFromAvailableToys(Long campaignId, Long toyId) {
     String key = AVAILABLE_TOYS_KEY_PREFIX + campaignId;
     redisTemplate.opsForSet().remove(key, toyId);
+
   }
 
   // Simple DTO for Redis cache
@@ -160,5 +164,24 @@ public class RedisGiveawayCampaignCache {
   public void cacheAvailableToysCount(Long campaignId, int count) {
     String key = AVAILABLE_TOYS_COUNT_KEY_PREFIX + campaignId;
     redisTemplate.opsForValue().set(key, count, CAMPAIGN_CACHE_TTL, TimeUnit.HOURS);
+  }
+
+  public void cacheToy(Long toyId, Toy toy) {
+    String key = TOY_KEY_PREFIX + toyId;
+    redisTemplate.opsForValue().set(key, toy, TOY_CACHE_TTL, TimeUnit.HOURS);
+  }
+
+  public Toy getCachedToy(Long toyId) {
+    String key = TOY_KEY_PREFIX + toyId;
+    Object cached = redisTemplate.opsForValue().get(key);
+    if (cached == null) {
+      return null;
+    }
+    return (Toy) cached;
+  }
+
+  public void removeToy(Long toyId) {
+    String key = TOY_KEY_PREFIX + toyId;
+    redisTemplate.delete(key);
   }
 }

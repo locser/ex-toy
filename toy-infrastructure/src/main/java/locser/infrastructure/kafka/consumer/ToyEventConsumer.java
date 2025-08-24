@@ -32,8 +32,10 @@ public class ToyEventConsumer {
     private final ToyParticipationRepository toyParticipationRepository;
 
     /**
-     * ## 1. Tối ưu Batch Size động - Enhanced batch processing with dynamic optimization
-     * Listens for toy events on the toy-events topic with dynamic batch size management.
+     * ## 1. Tối ưu Batch Size động - Enhanced batch processing with dynamic
+     * optimization
+     * Listens for toy events on the toy-events topic with dynamic batch size
+     * management.
      *
      * @param events     List of toy events received from Kafka
      * @param partitions Partition information
@@ -49,9 +51,9 @@ public class ToyEventConsumer {
 
         Instant startTime = Instant.now();
         boolean processingSuccessful = false;
-        
+
         try {
-            log.debug("Received batch of {} toy events", events.size());
+            // log.debug("Received batch of {} toy events", events.size());
 
             // Group events by type for efficient batch processing
             List<ToyEvent> participationEvents = new ArrayList<>();
@@ -76,20 +78,21 @@ public class ToyEventConsumer {
             }
 
             processingSuccessful = true;
-            
+
             // Manual acknowledgment after successful processing
             ack.acknowledge();
-            
-            log.info("Successfully processed batch: {} participation events, {} other events",
-                    participationEvents.size(), otherEvents.size());
-                    
+
+            // log.info("Successfully processed batch: {} participation events, {} other
+            // events",
+            // participationEvents.size(), otherEvents.size());
+
         } catch (Exception e) {
             log.error("Failed to process batch of {} events: {}", events.size(), e.getMessage(), e);
             processingSuccessful = false;
-            
+
             // Don't acknowledge failed batches - they will be retried
             throw e;
-            
+
         } finally {
             // Log processing time
             long processingTimeMs = java.time.Duration.between(startTime, Instant.now()).toMillis();
@@ -131,8 +134,8 @@ public class ToyEventConsumer {
      * @param event The toy created event
      */
     private void processToyCreatedEvent(ToyEvent event) {
-        log.info("Processing toy created event: toyId={}, userId={}, toyName={}",
-                event.getToyId(), event.getUserId(), event.getToyName());
+        // log.info("Processing toy created event: toyId={}, userId={}, toyName={}",
+        // event.getToyId(), event.getUserId(), event.getToyName());
 
         // Implement business logic for toy creation event
         // For example, update statistics, send notifications, etc.
@@ -205,7 +208,7 @@ public class ToyEventConsumer {
      * @param events List of participation created events
      */
     private void processParticipationCreatedEventsBatch(List<ToyEvent> events) {
-        log.info("Processing batch of {} participation events", events.size());
+        // log.info("Processing batch of {} participation events", events.size());
 
         try {
             // Create list of ToyParticipation records for batch insert
@@ -228,7 +231,8 @@ public class ToyEventConsumer {
             // Batch save all participation records
             List<ToyParticipation> savedParticipations = toyParticipationRepository.saveAll(participations);
 
-            log.info("Successfully created {} participation records in batch", savedParticipations.size());
+            // log.info("Successfully created {} participation records in batch",
+            // savedParticipations.size());
 
         } catch (Exception e) {
             log.error(
@@ -262,9 +266,10 @@ public class ToyEventConsumer {
             // Save the participation record
             ToyParticipation savedParticipation = toyParticipationRepository.save(participation);
 
-            log.debug("Successfully created participation record: id={}, userId={}, toyId={}, campaignId={}",
-                    savedParticipation.getId(), savedParticipation.getUserId(),
-                    savedParticipation.getToyId(), savedParticipation.getCampaignId());
+            // log.debug("Successfully created participation record: id={}, userId={},
+            // toyId={}, campaignId={}",
+            // savedParticipation.getId(), savedParticipation.getUserId(),
+            // savedParticipation.getToyId(), savedParticipation.getCampaignId());
 
         } catch (Exception e) {
             log.error("Failed to create participation record for event: toyId={}, userId={}, campaignId={}, error={}",

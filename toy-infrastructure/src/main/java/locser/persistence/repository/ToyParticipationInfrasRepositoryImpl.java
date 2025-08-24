@@ -91,7 +91,7 @@ public class ToyParticipationInfrasRepositoryImpl implements ToyParticipationRep
 
   @Override
   public List<ToyParticipation> saveAll(List<ToyParticipation> participations) {
-    System.out.println("ToyParticipationInfrasRepositoryImpl saveAll");
+    // System.out.println("ToyParticipationInfrasRepositoryImpl saveAll");
     return toyParticipationJPAMapper.saveAll(participations);
   }
 }

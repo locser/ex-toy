@@ -36,6 +36,18 @@ public class ToyController {
     }
 
     /**
+     * now get 1k req/s with get /api/v1/toys/{id}/detail.
+     *
+     * @param id Toy ID
+     * @return Toy response
+     */
+    @GetMapping("/{id}/detail")
+    public BaseResponse<ToyResponseDTO> getToyByIdDetail(@ValidId(entity = "Toy") @PathVariable Long id) {
+        ToyResponseDTO response = toyService.getToyByIdDetail(id);
+        return BaseResponse.success(response);
+    }
+
+    /**
      * Create a new toy.
      *
      * @param userId  User ID

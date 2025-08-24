@@ -16,8 +16,8 @@ COPY toy-starter/pom.xml toy-starter/
 # Configure Maven for faster builds
 ENV MAVEN_OPTS="-Dmaven.repo.local=/root/.m2/repository -Xmx2048m -XX:+TieredCompilation -XX:TieredStopAtLevel=1"
 
-# Download dependencies with parallel downloads
-RUN mvn dependency:go-offline -B -T 1C
+# Download dependencies
+RUN mvn dependency:go-offline -B
 
 # Copy source code in optimal order (least changing files first)
 COPY common/src common/src
@@ -28,7 +28,7 @@ COPY toy-controller/src toy-controller/src
 COPY toy-starter/src toy-starter/src
 
 # Build with optimizations
-RUN mvn clean package -DskipTests -B -T 1C -Dmaven.compile.fork=true
+RUN mvn clean package -DskipTests -B -Dmaven.compile.fork=true
 
 # Runtime stage with optimized base image
 FROM eclipse-temurin:21-jre-alpine

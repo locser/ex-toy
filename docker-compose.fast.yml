@@ -1,3 +1,4 @@
+# Fast version of docker-compose - assumes JAR is pre-built
 services:
   kafka1:
     image: "bitnami/kafka:3.5"
@@ -22,24 +23,15 @@ services:
       - KAFKA_LOG_RETENTION_MS=604800000
       - KAFKA_BROKER_ID=1
       - KAFKA_CFG_NODE_ID=1
-      # Message size configurations
       - KAFKA_CFG_MESSAGE_MAX_BYTES=209715200
       - KAFKA_CFG_REPLICA_FETCH_MAX_BYTES=209715200
       - KAFKA_CFG_SOCKET_REQUEST_MAX_BYTES=209715200
-      # Network configurations
       - KAFKA_CFG_SOCKET_RECEIVE_BUFFER_BYTES=102400
       - KAFKA_CFG_SOCKET_SEND_BUFFER_BYTES=102400
     volumes:
       - kafka_data:/bitnami/kafka
     healthcheck:
-      test:
-        [
-          "CMD",
-          "kafka-topics.sh",
-          "--list",
-          "--bootstrap-server",
-          "localhost:9092",
-        ]
+      test: ["CMD", "kafka-topics.sh", "--list", "--bootstrap-server", "localhost:9092"]
       interval: 10s
       timeout: 10s
       retries: 10
@@ -74,7 +66,6 @@ services:
       - mysql_data:/var/lib/mysql
       - ./docker/mysql/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
       - ./docker/mysql/my.cnf:/etc/mysql/conf.d/my.cnf:ro
-
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
       timeout: 20s
@@ -89,14 +80,14 @@ services:
       - "6379:6379"
     volumes:
       - redis_data:/data
-
     healthcheck:
       test: ["CMD", "redis-cli", "--raw", "incr", "ping"]
       timeout: 3s
       retries: 5
 
   x-toy-app:
-    image: x-toy-app
+    # Use pre-built image instead of building from source
+    image: x-toy-app-fast
     container_name: x-toy-app
     restart: unless-stopped
     ports:
@@ -112,7 +103,6 @@ services:
       SPRING_PROFILES_ACTIVE: docker,kafka
     volumes:
       - app_logs:/app/logs
-
     depends_on:
       mysql:
         condition: service_healthy
@@ -140,7 +130,6 @@ services:
       - "9090:9090"
     volumes:
       - ./prometheus.yml:/etc/prometheus/prometheus.yml
-
     restart: unless-stopped
 
   grafana:
@@ -182,7 +171,6 @@ services:
       - "9600:9600"
     environment:
       LS_JAVA_OPTS: "-Xmx256m -Xms256m"
-
     depends_on:
       - elasticsearch
 
@@ -193,7 +181,6 @@ services:
       - ./docker/elk/kibana.yml:/usr/share/kibana/config/kibana.yml
     ports:
       - "5601:5601"
-
     depends_on:
       - elasticsearch
 
@@ -210,7 +197,6 @@ services:
       - "9104:9104"
     environment:
       - DATA_SOURCE_NAME=root:password@tcp(mysql:3306)/
-
     depends_on:
       mysql:
         condition: service_healthy

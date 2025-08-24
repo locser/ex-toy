@@ -2,6 +2,27 @@
 
 Ứng dụng trao đổi đồ chơi giúp người dùng có thể trao đổi đồ chơi với nhau trong các sự kiện/chiến dịch.
 
+## 🚀 Quick Start - 2 Cách Run Ứng Dụng
+
+### Cách 1: Fast Build & Run (Khuyến nghị)
+```bash
+# Build JAR + Docker image và chạy
+./tmp_rovodev_fast_build.sh
+docker-compose up -d
+```
+
+### Cách 2: Build từ Docker Compose
+```bash
+# Build và chạy tất cả services
+docker-compose up -d --build
+```
+
+**Truy cập ứng dụng:**
+- API: http://localhost:1122
+- Kafka UI: http://localhost:8080
+- Grafana: http://localhost:3000
+- MySQL: localhost:3307
+
 ## Cấu trúc dự án
 
 Dự án được tổ chức theo kiến trúc sạch (Clean Architecture) với các module sau:

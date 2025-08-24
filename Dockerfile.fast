@@ -1,0 +1,45 @@
+# Fast Dockerfile - assumes JAR is already built locally
+FROM eclipse-temurin:21-jre-alpine
+
+# Install curl for healthcheck
+RUN apk add --no-cache curl
+
+# Create non-root user
+RUN addgroup -g 1000 appuser && adduser -D -s /bin/sh -u 1000 -G appuser appuser
+
+# Set working directory
+WORKDIR /app
+
+# Copy the pre-built JAR file from local build
+COPY toy-starter/target/*.jar app.jar
+
+# Change ownership to appuser
+RUN chown appuser:appuser app.jar
+
+# Switch to non-root user
+USER appuser
+
+# Expose the application port
+EXPOSE 1122
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=3s --start-period=30s --retries=3 \
+    CMD curl -f http://localhost:1122/actuator/health || exit 1
+
+# Optimized JVM options
+ENV JAVA_OPTS="-server \
+    -Xms512m -Xmx1024m \
+    -XX:+UseG1GC \
+    -XX:+UseContainerSupport \
+    -XX:MaxGCPauseMillis=200 \
+    -XX:+ExitOnOutOfMemoryError \
+    -XX:+HeapDumpOnOutOfMemoryError \
+    -XX:HeapDumpPath=/tmp/ \
+    -XX:+TieredCompilation \
+    -XX:TieredStopAtLevel=1 \
+    -Djava.security.egd=file:/dev/./urandom \
+    -Dspring.jmx.enabled=false \
+    -Dspring.main.lazy-initialization=true"
+
+# Run the application
+ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS -jar app.jar"]

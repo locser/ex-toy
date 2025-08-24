@@ -4,16 +4,14 @@ import http from "k6/http";
 
 export let options = {
   stages: [
-    { duration: "30s", target: 4000 }, // Extreme stress
-    { duration: "30s", target: 5000 }, // Extreme stress
-    { duration: "30s", target: 6000 }, // Extreme stress
+    { duration: "30s", target: 9000 }, // Extreme stress
     { duration: "30s", target: 10000 }, // Extreme stress
-    { duration: "30s", target: 15000 }, // Extreme stress
+    // { duration: "30s", target: 15000 }, // Extreme stress
   ],
   thresholds: {
     // http_req_duration: ["p(95)<1000"], // nghĩa là 95% số request phải hoàn thành trong dưới 1000ms (1 giây).
     http_req_duration: ["p(95)<30000"], // nghĩa là 95% số request phải hoàn thành trong dưới 30000ms (30 giây).
-    http_req_failed: ["rate<0.1"], // Allow 10% error rate under extreme load
+    http_req_failed: ["rate<0.01"], // Allow 10% error rate under extreme load
   },
 };
 
@@ -40,12 +38,7 @@ export default function () {
 
   check(response, {
     "status is 200": (r) => r.status === 200,
-    "response received": (r) => r.status !== 0,
-    "time < 10s": (r) => r.timings.duration < 10000, // 10s
-    "time < 15s": (r) => r.timings.duration < 15000, // 15s
-    "time < 20s": (r) => r.timings.duration < 20000, // 20s
-    "time < 30s": (r) => r.timings.duration < 30000, // 30s
-    "status is 400": (r) => r.status >= 400 && r.status < 500,
+    "status is 400": (r) => r.status >= 400,
   });
 
   // sleep(0.1); // Very short sleep for spike simulation

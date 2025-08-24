@@ -200,4 +200,10 @@ public class ToyApplicationServiceImpl implements ToyApplicationService {
     Toy toy = toyDomainService.restoreToy(id);
     return mapToDTO(toy);
   }
+
+  @Override
+  public Toy getToyByIdDetail(Long id) {
+
+    return toyDomainService.getToyById(id);
+  }
 }

@@ -72,9 +72,21 @@ public class GiveawayCampaignDomainServiceImpl implements GiveawayCampaignDomain
   @Override
   public Event getGiveawayCampaignById(Long id, Integer type, Integer status) {
 
-    Event event = giveawayCampaignRepository.findByIdAndTypeAndStatus(id, type, status);
+    // xưa nhầm vào database
+    // Event event = giveawayCampaignRepository.findByIdAndTypeAndStatus(id, type,
+    // status);
+    Event event = giveawayCampaignRepository.findById(id);
+
     if (event == null) {
       throw new BadRequestException("Không tìm thấy chiến dịch");
+    }
+
+    if (event.getType() != EventType.GIVEAWAY.getValue()) {
+      throw new BadRequestException("Chiến dịch không phải là chiến dịch Giveaway");
+    }
+
+    if (event.getStatus() != EventStatus.ONGOING.getValue()) {
+      throw new BadRequestException("Chiến dịch đã kết thúc");
     }
 
     return event;

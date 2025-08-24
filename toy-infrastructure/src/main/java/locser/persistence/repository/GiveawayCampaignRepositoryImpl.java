@@ -1,4 +1,4 @@
-package locser.infrastructure.repository;
+package locser.persistence.repository;
 
 import java.util.HashSet;
 import java.util.List;
@@ -7,6 +7,7 @@ import java.util.Set;
 import org.springframework.stereotype.Repository;
 
 import locser.infrastructure.cache.LocalCampaignCache;
+import locser.infrastructure.cache.LocalToyCache;
 import locser.infrastructure.cache.RedisGiveawayCampaignCache;
 import locser.toy.domain.model.entity.Event;
 import locser.toy.domain.model.entity.Toy;
@@ -27,6 +28,7 @@ public class GiveawayCampaignRepositoryImpl implements GiveawayCampaignRepositor
   private final ToyParticipationRepository toyParticipationRepository;
   private final RedisGiveawayCampaignCache redisCache;
   private final LocalCampaignCache localCache;
+  private final LocalToyCache localToyCache;
 
   public int getAvailableToysCount(Long campaignId) {
 
@@ -70,7 +72,7 @@ public class GiveawayCampaignRepositoryImpl implements GiveawayCampaignRepositor
       redisCache.cacheCampaign(id, campaign);
       localCache.putCampaign(id, campaign);
     }
-    
+
     return campaign;
   }
 
@@ -91,13 +93,14 @@ public class GiveawayCampaignRepositoryImpl implements GiveawayCampaignRepositor
         Toy toy = toyRepository.findOneById(randomToyId).orElse(null);
         if (toy != null && toy.getStatus().equals(ToyStatus.GIVEAWAY_AVAILABLE.getValue())) {
           // remove it from redis and update toy
-          System.out.println("Giveaway available TOY FROM REDIS");
+          // System.out.println("Giveaway available TOY FROM REDIS");
           redisCache.removeToyIdFromAvailableToys(campaignId, randomToyId);
+          localToyCache.removeToy(randomToyId);
           return toy;
         }
       }
     }
-    System.out.println("Giveaway available TOY FROM DB");
+    // System.out.println("Giveaway available TOY FROM DB");
 
     // Get from database and refresh cache
     List<Toy> toys = toyRepository.findByCampaignIdAndStatus(
@@ -125,13 +128,13 @@ public class GiveawayCampaignRepositoryImpl implements GiveawayCampaignRepositor
       Long randomToyId = redisCache.getRandomAvailableToy(campaignId);
       if (randomToyId != null) {
         // remove it from redis and update toy
-        System.out.println("Giveaway available TOY FROM REDIS");
+        // System.out.println("Giveaway available TOY FROM REDIS");
         redisCache.removeToyIdFromAvailableToys(campaignId, randomToyId);
         return randomToyId;
       }
     }
 
-    System.out.println("Giveaway available TOY FROM DB");
+    // System.out.println("Giveaway available TOY FROM DB");
 
     // Get from database and refresh cache
     List<Toy> toys = toyRepository.findByCampaignIdAndStatus(

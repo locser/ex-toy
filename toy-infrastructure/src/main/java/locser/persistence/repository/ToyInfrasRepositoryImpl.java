@@ -10,27 +10,49 @@ import org.springframework.data.domain.Sort.Direction;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
+import locser.infrastructure.cache.LocalToyCache;
+import locser.infrastructure.cache.RedisGiveawayCampaignCache;
 import locser.persistence.mapper.ToyJPAMapper;
 import locser.toy.domain.model.entity.Toy;
 import locser.toy.domain.model.enums.ToyStatus;
 import locser.toy.domain.repository.ToyRepository;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * Implementation of ToyRepository using JPA.
  */
 @Service
+@Slf4j
 public class ToyInfrasRepositoryImpl implements ToyRepository {
 
   private static final long ALL_RECORDS = -1L;
   private final ToyJPAMapper toyJPAMapper;
+  private final LocalToyCache localCache;
+  private final RedisGiveawayCampaignCache redisCache;
 
-  public ToyInfrasRepositoryImpl(ToyJPAMapper toyJPAMapper) {
+  public ToyInfrasRepositoryImpl(ToyJPAMapper toyJPAMapper, LocalToyCache localCache,
+      RedisGiveawayCampaignCache redisCache) {
     this.toyJPAMapper = toyJPAMapper;
+    this.localCache = localCache;
+    this.redisCache = redisCache;
   }
 
   @Override
   public Optional<Toy> findOneById(Long id) {
-    System.out.println("ToyInfrasRepositoryImpl.findOneById");
+    // TODO: now
+    Toy toy = localCache.getToy(id);
+    if (toy != null) {
+      log.info("Toy {} found in local cache", id);
+      return Optional.of(toy);
+    }
+
+    toy = redisCache.getCachedToy(id);
+    if (toy != null) {
+      log.info("Toy {} found in redis cache", id);
+      return Optional.of(toy);
+    }
+
+    log.info("Toy {} not found in local and redis cache, fetching from database", id);
     return toyJPAMapper.findOneById(id);
   }
 

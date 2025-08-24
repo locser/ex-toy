@@ -1,6 +1,7 @@
 package locser.controller.service;
 
 import java.util.List;
+
 import locser.controller.dto.toy.CreateToyRequestDTO;
 import locser.controller.dto.toy.ToyResponseDTO;
 import locser.controller.dto.toy.UpdateToyRequestDTO;
@@ -119,4 +120,6 @@ public interface ToyService {
    * @return True if user is the owner, false otherwise
    */
   boolean isOwner(Long userId, Long toyId);
+
+  ToyResponseDTO getToyByIdDetail(Long id);
 }

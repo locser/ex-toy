@@ -12,6 +12,7 @@ import locser.controller.dto.toy.UpdateToyRequestDTO;
 import locser.toy.domain.model.dto.CreateToyRequest;
 import locser.toy.domain.model.dto.ToyDTO;
 import locser.toy.domain.model.dto.UpdateToyRequest;
+import locser.toy.domain.model.entity.Toy;
 import locser.util.PageResponse;
 import locser.util.PageResponseDTO;
 
@@ -99,6 +100,28 @@ public class ToyDTOMapper {
       LocalDateTime updatedAt = LocalDateTime.ofInstant(dto.getUpdatedAt(), zoneId);
       responseDTO.setUpdatedAt(formatter.format(updatedAt));
     }
+
+    return responseDTO;
+  }
+
+  public static ToyResponseDTO toToyResponseDTO(Toy dto) {
+    if (dto == null) {
+      return null;
+    }
+
+    ToyResponseDTO responseDTO = new ToyResponseDTO();
+    responseDTO.setId(dto.getId());
+    responseDTO.setUserId(dto.getUserId());
+    responseDTO.setCampaignId(dto.getCampaignId());
+    responseDTO.setName(dto.getName());
+    responseDTO.setDescription(dto.getDescription());
+    responseDTO.setCategory(dto.getCategory());
+    responseDTO.setCondition(dto.getCondition());
+    responseDTO.setStatus(dto.getStatus());
+    responseDTO.setDesiredExchangeItems(dto.getDesiredExchangeItems());
+
+    responseDTO.setCreatedAt(dto.getCreatedAt().toString());
+    responseDTO.setUpdatedAt(dto.getUpdatedAt().toString());
 
     return responseDTO;
   }

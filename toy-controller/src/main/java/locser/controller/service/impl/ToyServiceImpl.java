@@ -1,6 +1,9 @@
 package locser.controller.service.impl;
 
 import java.util.List;
+
+import org.springframework.stereotype.Service;
+
 import locser.application.services.toy.ToyApplicationService;
 import locser.controller.dto.toy.CreateToyRequestDTO;
 import locser.controller.dto.toy.ToyResponseDTO;
@@ -8,10 +11,10 @@ import locser.controller.dto.toy.UpdateToyRequestDTO;
 import locser.controller.mapper.ToyDTOMapper;
 import locser.controller.service.ToyService;
 import locser.toy.domain.model.dto.ToyDTO;
+import locser.toy.domain.model.entity.Toy;
 import locser.toy.domain.service.ToyDomainService;
 import locser.util.PageResponse;
 import locser.util.PageResponseDTO;
-import org.springframework.stereotype.Service;
 
 /**
  * Implementation of ToyService.
@@ -26,6 +29,12 @@ public class ToyServiceImpl implements ToyService {
       ToyDomainService toyDomainService) {
     this.toyApplicationService = toyApplicationService;
     this.toyDomainService = toyDomainService;
+  }
+
+  @Override
+  public ToyResponseDTO getToyByIdDetail(Long id) {
+    Toy toy = toyApplicationService.getToyByIdDetail(id);
+    return ToyDTOMapper.toToyResponseDTO(toy);
   }
 
   @Override

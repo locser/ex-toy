@@ -1,6 +1,7 @@
 package locser.application.services.toy;
 
 import java.util.List;
+
 import locser.toy.domain.model.dto.CreateToyRequest;
 import locser.toy.domain.model.dto.ToyDTO;
 import locser.toy.domain.model.dto.UpdateToyRequest;
@@ -83,7 +84,8 @@ public interface ToyApplicationService {
    * @param userId     ID của người dùng (tùy chọn)
    * @param status     Trạng thái đồ chơi (tùy chọn)
    * @param campaignId ID của chiến dịch (tùy chọn)
-   * @return Đối tượng PageResponse chứa danh sách DTO của đồ chơi và thông tin phân trang
+   * @return Đối tượng PageResponse chứa danh sách DTO của đồ chơi và thông tin
+   *         phân trang
    */
   PageResponse<ToyDTO> getToysWithPagination(int page, int limit, Long userId, Integer status,
       Long campaignId);
@@ -98,7 +100,8 @@ public interface ToyApplicationService {
    * @param campaignId    ID của chiến dịch (tùy chọn)
    * @param sortBy        Trường để sắp xếp
    * @param sortDirection Hướng sắp xếp (asc, desc)
-   * @return Đối tượng PageResponse chứa danh sách DTO của đồ chơi và thông tin phân trang
+   * @return Đối tượng PageResponse chứa danh sách DTO của đồ chơi và thông tin
+   *         phân trang
    */
   PageResponse<ToyDTO> getToysWithPagination(int page, int limit, Long userId, Integer status,
       Long campaignId, String sortBy, String sortDirection);
@@ -127,4 +130,6 @@ public interface ToyApplicationService {
    * @return DTO của đồ chơi đã khôi phục
    */
   ToyDTO restoreToy(Long id);
+
+  Toy getToyByIdDetail(Long id);
 }

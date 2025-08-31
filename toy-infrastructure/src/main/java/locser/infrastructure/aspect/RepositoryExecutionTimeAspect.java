@@ -13,7 +13,7 @@ public class RepositoryExecutionTimeAspect {
     private static final Logger logger = LoggerFactory.getLogger(RepositoryExecutionTimeAspect.class);
     private static final long SLOW_QUERY_THRESHOLD = 1000; // 1 second
 
-    @Around("execution(* locser.toy.domain.repository.*.*(..))")
+    @Around("execution(* locser.persistence.mapper.*.*(..))")
     public Object logExecutionTime(ProceedingJoinPoint joinPoint) throws Throwable {
         long startTime = System.currentTimeMillis();
 
@@ -25,10 +25,12 @@ public class RepositoryExecutionTimeAspect {
             String className = joinPoint.getTarget().getClass().getSimpleName();
 
             if (executionTime > SLOW_QUERY_THRESHOLD) {
-                logger.warn("Slow repository method detected! {}.{} took {}ms",
+                logger.warn("Slow database operation detected! {}.{} took {}ms",
                         className, methodName, executionTime);
+                // Consider removing System.exit(1) in production - it's too aggressive
+                // System.exit(1);
             } else {
-                logger.debug("Repository method {}.{} took {}ms",
+                logger.debug("Database operation {}.{} took {}ms",
                         className, methodName, executionTime);
             }
         }

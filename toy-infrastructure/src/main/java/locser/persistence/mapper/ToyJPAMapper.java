@@ -1,7 +1,6 @@
 package locser.persistence.mapper;
 
 import java.util.List;
-import java.util.Optional;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -28,7 +27,7 @@ public interface ToyJPAMapper extends JpaRepository<Toy, Long>, JpaSpecification
          * @param id The ID of the toy
          * @return An Optional containing the toy if found, or empty if not found
          */
-        Optional<Toy> findOneById(Long id);
+        Toy findOneById(Long id);
 
         /**
          * Find toys by user ID.

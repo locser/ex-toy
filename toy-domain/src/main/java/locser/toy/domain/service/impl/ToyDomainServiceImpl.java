@@ -1,20 +1,19 @@
 package locser.toy.domain.service.impl;
 
+import org.springframework.stereotype.Service;
+
 import locser.toy.domain.exception.BadRequestException;
-import locser.toy.domain.exception.ResourceNotFoundException;
 import locser.toy.domain.model.entity.Toy;
 import locser.toy.domain.model.enums.ToyStatus;
 import locser.toy.domain.repository.ToyRepository;
 import locser.toy.domain.service.ToyDomainService;
 import locser.toy.domain.validation.IdValidator;
-import org.springframework.stereotype.Service;
 
 /**
  * Triển khai các dịch vụ miền cho Toy.
  */
 @Service
 public class ToyDomainServiceImpl implements ToyDomainService {
-
 
   private final ToyRepository toyRepository;
 
@@ -38,8 +37,7 @@ public class ToyDomainServiceImpl implements ToyDomainService {
     // Kiểm tra ID phải lớn hơn 0
     IdValidator.validateId(id, "Toy");
 
-    return toyRepository.findOneById(id)
-        .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy đồ chơi với ID: " + id));
+    return toyRepository.findOneById(id);
   }
 
   @Override

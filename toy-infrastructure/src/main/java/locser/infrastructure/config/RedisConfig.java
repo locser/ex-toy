@@ -24,13 +24,15 @@ public class RedisConfig {
 
         // Use StringRedisSerializer for keys
         template.setKeySerializer(new StringRedisSerializer());
-        // Use GenericJackson2JsonRedisSerializer with configured ObjectMapper for
-        // values
+        // Use GenericJackson2JsonRedisSerializer with configured ObjectMapper for values
         template.setValueSerializer(new GenericJackson2JsonRedisSerializer(objectMapper));
         template.setHashKeySerializer(new StringRedisSerializer());
         template.setHashValueSerializer(new GenericJackson2JsonRedisSerializer(objectMapper));
 
+        // Transaction support disabled for better performance under high load
+        template.setEnableTransactionSupport(false);
         template.afterPropertiesSet();
         return template;
     }
+
 }

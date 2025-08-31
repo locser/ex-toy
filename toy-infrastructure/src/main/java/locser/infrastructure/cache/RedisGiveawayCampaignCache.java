@@ -166,18 +166,82 @@ public class RedisGiveawayCampaignCache {
     redisTemplate.opsForValue().set(key, count, CAMPAIGN_CACHE_TTL, TimeUnit.HOURS);
   }
 
+  public static class ToyCacheDTO {
+    public Long id;
+    public Long userId;
+    public Long campaignId;
+    public String name;
+    public String description;
+    public String category;
+    public Integer condition;
+    public Integer status;
+    public String desiredExchangeItems;
+    public String createdAt;
+    public String updatedAt;
+  }
+
+  private Toy fromToyDto(ToyCacheDTO dto) {
+    Toy toy = new Toy();
+    toy.setId(dto.id);
+    toy.setUserId(dto.userId);
+    toy.setCampaignId(dto.campaignId);
+    toy.setName(dto.name);
+    toy.setDescription(dto.description);
+    toy.setCategory(dto.category);
+    toy.setCondition(dto.condition);
+    toy.setStatus(dto.status);
+    toy.setDesiredExchangeItems(dto.desiredExchangeItems);
+    toy.setCreatedAt(java.time.LocalDateTime.parse(dto.createdAt));
+    toy.setUpdatedAt(java.time.LocalDateTime.parse(dto.updatedAt));
+    return toy;
+  }
+
+  private ToyCacheDTO toToyDto(Toy toy) {
+    ToyCacheDTO dto = new ToyCacheDTO();
+    dto.id = toy.getId();
+    dto.userId = toy.getUserId();
+    dto.campaignId = toy.getCampaignId();
+    dto.name = toy.getName();
+    dto.description = toy.getDescription();
+    dto.category = toy.getCategory();
+    dto.condition = toy.getCondition();
+    dto.status = toy.getStatus();
+    dto.desiredExchangeItems = toy.getDesiredExchangeItems();
+    dto.createdAt = toy.getCreatedAt().toString();
+    dto.updatedAt = toy.getUpdatedAt().toString();
+    return dto;
+  }
+
   public void cacheToy(Long toyId, Toy toy) {
     String key = TOY_KEY_PREFIX + toyId;
-    redisTemplate.opsForValue().set(key, toy, TOY_CACHE_TTL, TimeUnit.HOURS);
+    ToyCacheDTO dto = toToyDto(toy);
+    redisTemplate.opsForValue().set(key, dto, TOY_CACHE_TTL, TimeUnit.HOURS);
   }
 
   public Toy getCachedToy(Long toyId) {
     String key = TOY_KEY_PREFIX + toyId;
-    Object cached = redisTemplate.opsForValue().get(key);
-    if (cached == null) {
+    
+    try {
+      Object cached = redisTemplate.opsForValue().get(key);
+
+      if (cached == null) {
+        return null;
+      }
+
+      if (cached instanceof ToyCacheDTO) {
+        return fromToyDto((ToyCacheDTO) cached);
+      }
+      // Fallback: convert via Jackson
+      ToyCacheDTO dto = new ObjectMapper().convertValue(cached, ToyCacheDTO.class);
+      return fromToyDto(dto);
+    } catch (Exception e) {
+      System.err.println("Failed to get cached toy " + toyId + ": " + e.getMessage());
+      // Don't delete key on timeout/connection errors, only on conversion errors
+      if (e.getMessage() != null && !e.getMessage().contains("timeout") && !e.getMessage().contains("connection")) {
+        redisTemplate.delete(key);
+      }
       return null;
     }
-    return (Toy) cached;
   }
 
   public void removeToy(Long toyId) {

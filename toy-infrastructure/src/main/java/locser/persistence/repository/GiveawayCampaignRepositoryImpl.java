@@ -90,7 +90,7 @@ public class GiveawayCampaignRepositoryImpl implements GiveawayCampaignRepositor
     if (availableCount > 0) {
       Long randomToyId = redisCache.getRandomAvailableToy(campaignId);
       if (randomToyId != null) {
-        Toy toy = toyRepository.findOneById(randomToyId).orElse(null);
+        Toy toy = toyRepository.findOneById(randomToyId);
         if (toy != null && toy.getStatus().equals(ToyStatus.GIVEAWAY_AVAILABLE.getValue())) {
           // remove it from redis and update toy
           // System.out.println("Giveaway available TOY FROM REDIS");
@@ -117,7 +117,7 @@ public class GiveawayCampaignRepositoryImpl implements GiveawayCampaignRepositor
 
     // Get random toy
     Long randomToyId = redisCache.getRandomAvailableToy(campaignId);
-    return randomToyId != null ? toyRepository.findOneById(randomToyId).orElse(null) : null;
+    return randomToyId != null ? toyRepository.findOneById(randomToyId) : null;
   }
 
   @Override

@@ -1,7 +1,6 @@
 package locser.persistence.repository;
 
 import java.util.List;
-import java.util.Optional;
 
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -38,28 +37,51 @@ public class ToyInfrasRepositoryImpl implements ToyRepository {
   }
 
   @Override
-  public Optional<Toy> findOneById(Long id) {
-    // TODO: now
-    Toy toy = localCache.getToy(id);
-    if (toy != null) {
-      log.info("Toy {} found in local cache", id);
-      return Optional.of(toy);
+  public Toy findOneById(Long id) {
+    // Check local cache first
+    Toy toyCache = localCache.getToy(id);
+    if (toyCache != null) {
+      // log.info("Toy {} found in local cache", id);
+      return toyCache;
     }
 
-    toy = redisCache.getCachedToy(id);
-    if (toy != null) {
-      log.info("Toy {} found in redis cache", id);
-      return Optional.of(toy);
+    // Check Redis cache second
+    Toy toyRedis = redisCache.getCachedToy(id);
+    if (toyRedis != null) {
+      // log.info("Toy {} found in redis cache", id);
+      localCache.putToy(id, toyRedis);
+      return toyRedis;
     }
 
-    log.info("Toy {} not found in local and redis cache, fetching from database", id);
-    return toyJPAMapper.findOneById(id);
+    // Fetch from database if not in cache
+    // log.info("Toy {} not found in local and redis cache, fetching from database",
+    // id);
+    Toy toyFromDb = toyJPAMapper.findOneById(id);
+
+    // Cache the result if found
+    if (toyFromDb != null) {
+      log.info("Toy {} fetched from database, caching in both local and redis", id);
+      // Cache in both local and Redis
+      localCache.putToy(id, toyFromDb);
+      redisCache.cacheToy(id, toyFromDb);
+    }
+
+    return toyFromDb;
   }
 
   @Override
   public Toy save(Toy toy) {
     System.out.println("ToyInfrasRepositoryImpl.save");
-    return toyJPAMapper.save(toy);
+    Toy savedToy = toyJPAMapper.save(toy);
+
+    // Update cache with the saved toy
+    if (savedToy != null && savedToy.getId() != null) {
+      log.info("Toy {} saved, updating cache", savedToy.getId());
+      localCache.putToy(savedToy.getId(), savedToy);
+      redisCache.cacheToy(savedToy.getId(), savedToy);
+    }
+
+    return savedToy;
   }
 
   @Override
@@ -320,6 +342,11 @@ public class ToyInfrasRepositoryImpl implements ToyRepository {
   @Override
   public void updateStatus(Long toyId, Integer status) {
     toyJPAMapper.updateStatus(toyId, status);
+
+    // Invalidate cache since toy status has changed
+    log.info("Toy {} status updated, invalidating cache", toyId);
+    localCache.removeToy(toyId);
+    redisCache.removeToy(toyId);
   }
 
 }

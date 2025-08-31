@@ -14,7 +14,7 @@ import lombok.extern.slf4j.Slf4j;
 public class LocalToyCache {
     // TODO: nhận quà xong cần xoá local cache của toy đó
 
-    private static final int CACHE_TTL_SECONDS = 15;
+    private static final int CACHE_TTL_SECONDS = 60 * 60; // Increased to 60 seconds for better performance
 
     private final Map<Long, CacheEntry> cache = new ConcurrentHashMap<>();
 
@@ -25,9 +25,9 @@ public class LocalToyCache {
         private final Toy toy;
         private final LocalDateTime expiryTime;
 
-        public CacheEntry(Toy toy) {
+        public CacheEntry(Toy toy, int ttl) {
             this.toy = toy;
-            this.expiryTime = LocalDateTime.now().plusSeconds(CACHE_TTL_SECONDS);
+            this.expiryTime = LocalDateTime.now().plusSeconds(ttl);
         }
 
         public boolean isExpired() {
@@ -71,8 +71,10 @@ public class LocalToyCache {
      */
     public void putToy(Long toyId, Toy toy) {
         if (toy != null) {
-            cache.put(toyId, new CacheEntry(toy));
-            log.debug("toy {} cached locally for {} seconds", toyId, CACHE_TTL_SECONDS);
+            int ttl = CACHE_TTL_SECONDS + (int) (Math.random() * 1000);
+
+            cache.put(toyId, new CacheEntry(toy, ttl));
+            log.debug("toy {} cached locally for {} seconds", toyId, ttl);
         }
     }
 

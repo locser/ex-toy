@@ -46,20 +46,21 @@ spring:
       maximum-pool-size: 50
       minimum-idle: 10
 
-  # Redis - Docker configuration
+  # Redis - Docker configuration (Optimized for high load)
   data:
     redis:
       host: ${REDIS_HOST:redis}
       port: 6379
       password: ${REDIS_PASSWORD:GNwHez7OT53ftK5Ui3IOOlg1jUMwKT5}
       database: 0
+      timeout: 2000ms  # Reduced from 30s to 2s
       lettuce:
         pool:
-          max-active: 8
-          max-idle: 8
-          min-idle: 0
-          max-wait: -1ms
-      connect-timeout: 30000
+          max-active: 50    # Increased from 8 to 50 for high concurrency
+          max-idle: 20      # Increased from 8 to 20
+          min-idle: 5       # Increased from 0 to 5 for faster response
+          max-wait: 2000ms  # Set explicit timeout instead of -1ms
+        shutdown-timeout: 100ms
 
 logging:
   level:

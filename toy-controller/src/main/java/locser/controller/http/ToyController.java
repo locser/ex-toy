@@ -17,6 +17,7 @@ import locser.controller.dto.toy.CreateToyRequestDTO;
 import locser.controller.dto.toy.ToyResponseDTO;
 import locser.controller.dto.toy.UpdateToyRequestDTO;
 import locser.controller.response.BaseResponse;
+import locser.controller.security.RequirePermission;
 import locser.controller.service.ToyService;
 import locser.toy.domain.validation.annotation.ValidId;
 import locser.util.PageResponseDTO;
@@ -42,6 +43,7 @@ public class ToyController {
      * @return Toy response
      */
     @GetMapping("/{id}/detail")
+    @RequirePermission("READ_TOY")
     public BaseResponse<ToyResponseDTO> getToyByIdDetail(@ValidId(entity = "Toy") @PathVariable Long id) {
         ToyResponseDTO response = toyService.getToyByIdDetail(id);
         return BaseResponse.success(response);
@@ -55,6 +57,7 @@ public class ToyController {
      * @return Created toy response
      */
     @PostMapping
+    @RequirePermission("CREATE_TOY")
     public BaseResponse<ToyResponseDTO> createToy(
             @RequestParam Long userId,
             @Valid @RequestBody CreateToyRequestDTO request) {
@@ -75,6 +78,7 @@ public class ToyController {
      * @return Paginated toys response
      */
     @GetMapping
+    @RequirePermission("READ_TOY")
     public BaseResponse<PageResponseDTO<ToyResponseDTO>> getAllToys(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int limit,
@@ -95,6 +99,7 @@ public class ToyController {
      * @return Toy response
      */
     @GetMapping("/{id}")
+    @RequirePermission("READ_TOY")
     public BaseResponse<ToyResponseDTO> getToyById(@ValidId(entity = "Toy") @PathVariable Long id) {
         ToyResponseDTO response = toyService.getToyById(id);
         return BaseResponse.success(response);
@@ -108,6 +113,7 @@ public class ToyController {
      * @return Updated toy response
      */
     @PutMapping("/{id}")
+    @RequirePermission(value = "UPDATE_TOY", allowOwner = true, resourceType = "TOY", resourceIdParam = "id")
     public BaseResponse<ToyResponseDTO> updateToy(
             @ValidId(entity = "Toy") @PathVariable Long id,
             @Valid @RequestBody UpdateToyRequestDTO request) {
@@ -122,6 +128,7 @@ public class ToyController {
      * @return Success response
      */
     @DeleteMapping("/{id}")
+    @RequirePermission(value = {"DELETE_TOY", "MANAGE_TOY"}, allowOwner = true, resourceType = "TOY", resourceIdParam = "id")
     public BaseResponse deleteToy(@ValidId(entity = "Toy") @PathVariable Long id) {
         toyService.deleteToy(id);
         return BaseResponse.success();
@@ -135,6 +142,7 @@ public class ToyController {
      * @return Updated toy response
      */
     @PostMapping("/{id}/status")
+    @RequirePermission(value = {"UPDATE_TOY", "MANAGE_TOY"}, allowOwner = true, resourceType = "TOY", resourceIdParam = "id")
     public BaseResponse<ToyResponseDTO> updateToyStatus(
             @ValidId(entity = "Toy") @PathVariable Long id,
             @RequestParam Integer status) {
@@ -150,6 +158,7 @@ public class ToyController {
      * @return Updated toy response
      */
     @PostMapping("/{id}/campaign/{campaignId}")
+    @RequirePermission(value = {"UPDATE_TOY", "MANAGE_GIVEAWAY"}, allowOwner = true, resourceType = "TOY", resourceIdParam = "id")
     public BaseResponse<ToyResponseDTO> addToCampaign(
             @ValidId(entity = "Toy") @PathVariable Long id,
             @ValidId(entity = "Campaign") @PathVariable Long campaignId) {
@@ -164,6 +173,7 @@ public class ToyController {
      * @return Updated toy response
      */
     @DeleteMapping("/{id}/campaign")
+    @RequirePermission(value = {"UPDATE_TOY", "MANAGE_GIVEAWAY"}, allowOwner = true, resourceType = "TOY", resourceIdParam = "id")
     public BaseResponse<ToyResponseDTO> removeFromCampaign(@ValidId(entity = "Toy") @PathVariable Long id) {
         ToyResponseDTO response = toyService.removeFromCampaign(id);
         return BaseResponse.success(response);
@@ -176,6 +186,7 @@ public class ToyController {
      * @return Restored toy response
      */
     @PostMapping("/{id}/restore")
+    @RequirePermission(value = {"MANAGE_TOY", "ADMIN_ACCESS"})
     public BaseResponse<ToyResponseDTO> restoreToy(@ValidId(entity = "Toy") @PathVariable Long id) {
         ToyResponseDTO response = toyService.restoreToy(id);
         return BaseResponse.success(response);
@@ -189,6 +200,7 @@ public class ToyController {
      * @return List of toys
      */
     @GetMapping("/user/{userId}")
+    @RequirePermission("READ_TOY")
     public BaseResponse<List<ToyResponseDTO>> getToysByUserId(
             @ValidId(entity = "User") @PathVariable Long userId,
             @RequestParam(required = false) Integer status) {

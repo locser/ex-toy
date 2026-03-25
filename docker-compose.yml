@@ -1,6 +1,6 @@
 services:
   kafka1:
-    image: "bitnami/kafka:3.5"
+    image: "bitnami/kafka"
     container_name: x-toy-kafka1
     restart: unless-stopped
     ports:

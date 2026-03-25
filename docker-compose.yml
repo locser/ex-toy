@@ -76,7 +76,7 @@ services:
       - ./docker/mysql/my.cnf:/etc/mysql/conf.d/my.cnf:ro
 
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      test: [ "CMD", "mysqladmin", "ping", "-h", "localhost" ]
       timeout: 20s
       retries: 10
 
@@ -91,7 +91,7 @@ services:
       - redis_data:/data
 
     healthcheck:
-      test: ["CMD", "redis-cli", "--raw", "incr", "ping"]
+      test: [ "CMD", "redis-cli", "--raw", "incr", "ping" ]
       timeout: 3s
       retries: 5
 
@@ -99,8 +99,8 @@ services:
     image: x-toy-app
     container_name: x-toy-app
     restart: unless-stopped
-    ports:
-      - "1122:1122"
+    portsAuthentication
+    - "1122:1122"
     environment:
       DB_URL: jdbc:mysql://mysql:3306/java_demo?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
       DB_USERNAME: root
@@ -121,7 +121,7 @@ services:
       kafka1:
         condition: service_healthy
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:1122/actuator/health"]
+      test: [ "CMD", "curl", "-f", "http://localhost:1122/actuator/health" ]
       interval: 30s
       timeout: 10s
       retries: 5

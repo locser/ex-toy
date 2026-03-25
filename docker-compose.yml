@@ -1,45 +1,35 @@
 services:
   kafka1:
-    image: "apache/kafka"
+    image: apache/kafka:3.7.0
     container_name: x-toy-kafka1
     restart: unless-stopped
     ports:
       - "9192:9092"
       - "9193:9094"
     environment:
-      - KAFKA_ENABLE_KRAFT=yes
-      - KAFKA_CFG_PROCESS_ROLES=broker,controller
-      - KAFKA_CFG_CONTROLLER_LISTENER_NAMES=CONTROLLER
-      - KAFKA_CFG_LISTENERS=PLAINTEXT://:9092,CONTROLLER://:9093,EXTERNAL://:9094
-      - KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP=CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT,EXTERNAL:PLAINTEXT
-      - KAFKA_CFG_ADVERTISED_LISTENERS=EXTERNAL://localhost:9193,PLAINTEXT://kafka1:9092
-      - KAFKA_CFG_INTER_BROKER_LISTENER_NAME=PLAINTEXT
-      - KAFKA_KRAFT_CLUSTER_ID=LelM2dIFQkiUFvXCEcqRWA
-      - KAFKA_CFG_CONTROLLER_QUORUM_VOTERS=1@kafka1:9093
-      - ALLOW_PLAINTEXT_LISTENER=yes
-      - KAFKA_HEAP_OPTS=-Xmx512M -Xms256M
-      - KAFKA_CFG_AUTO_CREATE_TOPICS_ENABLE=true
-      - KAFKA_LOG_RETENTION_MS=604800000
-      - KAFKA_BROKER_ID=1
-      - KAFKA_CFG_NODE_ID=1
-      # Message size configurations
-      - KAFKA_CFG_MESSAGE_MAX_BYTES=209715200
-      - KAFKA_CFG_REPLICA_FETCH_MAX_BYTES=209715200
-      - KAFKA_CFG_SOCKET_REQUEST_MAX_BYTES=209715200
-      # Network configurations
-      - KAFKA_CFG_SOCKET_RECEIVE_BUFFER_BYTES=102400
-      - KAFKA_CFG_SOCKET_SEND_BUFFER_BYTES=102400
+      # Định danh và Vai trò
+      KAFKA_NODE_ID: 1
+      KAFKA_PROCESS_ROLES: broker,controller
+
+      # Cấu hình Mạng (Networking)
+      KAFKA_LISTENERS: PLAINTEXT://:9092,CONTROLLER://:9093,EXTERNAL://:9094
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka1:9092,EXTERNAL://localhost:9193
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT,EXTERNAL:PLAINTEXT
+
+      # Cấu hình Cụm KRaft
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka1:9093
+      CLUSTER_ID: 5L6g3nShT-eMCtK--X86sw # (Có thể dùng ID mà log vừa sinh ra cho bạn)
+
+      # Tùy chọn (để chạy 1 node không bị lỗi thiếu replica)
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
     volumes:
-      - kafka_data:/bitnami/kafka
+      # Lưu ý: Đường dẫn mount volume của Apache khác với Bitnami
+      - kafka_data:/tmp/kafka-logs
     healthcheck:
-      test:
-        [
-          "CMD",
-          "kafka-topics.sh",
-          "--list",
-          "--bootstrap-server",
-          "localhost:9092",
-        ]
+      test: [ "CMD", "/opt/kafka/bin/kafka-topics.sh", "--list", "--bootstrap-server", "localhost:9092" ]
       interval: 10s
       timeout: 10s
       retries: 10

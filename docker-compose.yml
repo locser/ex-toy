@@ -99,8 +99,8 @@ services:
     image: x-toy-app
     container_name: x-toy-app
     restart: unless-stopped
-    portsAuthentication
-    - "1122:1122"
+    ports:
+      - "1122:1122"
     environment:
       DB_URL: jdbc:mysql://mysql:3306/java_demo?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
       DB_USERNAME: root
